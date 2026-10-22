@@ -72,7 +72,7 @@ td,th{text-align:left;padding:6px 10px;border-bottom:1px solid var(--d)}th{color
 </details>
 
 <div class="go"><button id="go" type="button" disabled>ประมวลผลและดาวน์โหลด .xlsx</button><span class="mut" id="gohint"></span></div>
-<div class="tabs">แท็บในไฟล์ผลลัพธ์: Main 281 · main คลัง · main คลัง งบ C / I / P · Main 581 · WBS · WBS booking · วัสดุ · วัสดุ booking · WBS รื้อถอน · cn43n (กรอง) · แท็บ booking ตามรหัส</div>
+<div class="tabs">แท็บในไฟล์ผลลัพธ์: Main 281 · main คลัง · main คลัง งบ C / I / P · Main 581 · WBS · WBS booking (+ แยกตามรหัส) · วัสดุ · วัสดุ booking (+ แยกตามรหัส) · WBS รื้อถอน · cn43n (กรอง) · แท็บ booking ตามรหัส</div>
 <div id="msg"></div><div id="sum"></div>
 </main>
 <script>/*! ExcelJS 19-10-2023 */
@@ -184,7 +184,7 @@ async function parseFile(buf){
 const need=(h,n,l)=>{const i=h.indexOf(n);if(i<0)throw new Error(l+' ไม่พบคอลัมน์ "'+n+'"');return i};
 const BUD=['C','I','P'],budName=(S,b)=>S.extra.store+' งบ '+b;
 function checkNames(S,codes){
-  const n=['cn43n (กรอง)',...BUD.map(b=>budName(S,b)),...S.groups.flatMap(g=>[g.main,g.pivot]),...Object.values(S.extra),...codes];
+  const n=['cn43n (กรอง)',...BUD.map(b=>budName(S,b)),...S.applicants.flatMap(cd=>[S.extra.wbsBooking+' '+cd,S.extra.matBooking+' '+cd]),...S.groups.flatMap(g=>[g.main,g.pivot]),...Object.values(S.extra),...codes];
   for(const x of n)if(!x||x.length>31||/[\[\]:*?\/\\]/.test(x))return'ชื่อแท็บไม่ถูกต้อง: "'+x+'" (ห้ามว่าง ยาวเกิน 31 ตัว หรือมี [ ] : * ? / \\)';
   if(new Set(n.map(x=>x.toLowerCase())).size!==n.length)return'ชื่อแท็บซ้ำกัน';
   return'';
@@ -239,10 +239,12 @@ function build(cn,zc,wr,S){
       row=[...o.slice(0,dI),res,note,...o.slice(dI)]}
     mains[g].push(row);
   }
-  const E=S.extra,defs=[[S.groups[0].pivot,0,R7],[E.wbsBooking,0,[...R7,...B2]],[E.mat,0,M7,'คำอธิบายของวัสดุ'],[E.matBooking,0,[...M7,...B2],'คำอธิบายของวัสดุ'],[S.groups[1].pivot,1,R7]];
+  const E=S.extra,codes=S.applicants.filter(cd=>mains[0].some(r=>key(r[2])===cd)),byCode=cd=>mains[0].filter(r=>key(r[2])===cd),SM='คำอธิบายของวัสดุ';
+  const defs=[[S.groups[0].pivot,mains[0],R7],[E.wbsBooking,mains[0],[...R7,...B2]],...codes.map(cd=>[E.wbsBooking+' '+cd,byCode(cd),[...R7,...B2]]),
+    [E.mat,mains[0],M7,SM],[E.matBooking,mains[0],[...M7,...B2],SM],...codes.map(cd=>[E.matBooking+' '+cd,byCode(cd),[...M7,...B2],SM]),[S.groups[1].pivot,mains[1],R7]];
   const iBk=heads[0].indexOf('เลขที่ใบจองพัสดุ'),store=mains[0].filter(r=>String(r[iBk]).trim()!=='').map(r=>[...r,String(r[0]).trim().charAt(0)]);
   const bud={};for(const b of BUD)bud[b]=store.filter(r=>r[r.length-1]===b);const budOther={};for(const r of store){const b=r[r.length-1];if(!BUD.includes(b))budOther[b||'(ว่าง)']=(budOther[b||'(ว่าง)']||0)+1}
-  const pivots=defs.map(([name,g,names,sub])=>({name,...pivot(heads[g],mains[g],names,sub)}));
+  const pivots=defs.map(([name,rows,names,sub])=>({name,...pivot(heads[rows===mains[1]?1:0],rows,names,sub)}));
   const attList=Object.keys(att).map(code=>{const w=att[code].w;return{code,w,last:w.rows.length+1,kc:w.head.length}});
   return{cnHead:cn.head,cnF,heads,mains,store,bud,pivots,attList,iH,iL,iQ,
     stats:{store:store.length,storeSum:R6(store.reduce((s,o)=>s+o[o.length-2],0)),bud:BUD.map(b=>({b,rows:bud[b].length,sum:R6(bud[b].reduce((s,o)=>s+o[o.length-2],0))})),budOther,cnTotal:cn.rows.length,cnKept:cnF.length,zcTotal:zc.rows.length,missRows,miss:[...miss].slice(0,5),missN:miss.size,positive,other,bk,
