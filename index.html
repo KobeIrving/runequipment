@@ -2,35 +2,72 @@
 <html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ตัวแปลงรายงาน cn43n + zcn52n</title>
 <style>
-:root{color-scheme:light dark;--bg:#f6f7f9;--c:#fff;--t:#1d2430;--m:#6b7380;--b:#d5d9e0;--a:#7a3e9d;--ok:#1b7f4b;--w:#b45309;--e:#b42318}
-@media(prefers-color-scheme:dark){:root{--bg:#14171c;--c:#1e232b;--t:#e8ebf0;--m:#98a1ae;--b:#363d49;--a:#b98ae0;--ok:#4cc38a;--w:#f0a04b;--e:#ff7b72}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:16px/1.5 'Sarabun','TH Sarabun New',Tahoma,sans-serif}
-main{max-width:780px;margin:0 auto;padding:20px 16px 48px}h1{font-size:1.4rem;margin:.2em 0}h2{font-size:1.05rem;margin:0 0 8px}
-.card{background:var(--c);border:1px solid var(--b);border-radius:10px;padding:14px 16px;margin:14px 0}
-#dz{display:block;border:2px dashed var(--b);border-radius:10px;padding:26px 12px;text-align:center;cursor:pointer;background:var(--c)}
-#dz.on{border-color:var(--a);background:color-mix(in srgb,var(--a) 10%,var(--c))}#dz input{display:none}
-.mut,small,.sub{color:var(--m)}.files{display:grid;grid-template-columns:90px 1fr;gap:4px 8px;margin-top:10px}.files b{font-weight:600}.files div:nth-child(even){color:var(--ok)}
-label{display:block;font-size:.9rem;color:var(--m);margin:8px 0 2px}input[type=text]{width:100%;padding:7px 9px;border:1px solid var(--b);border-radius:6px;background:var(--bg);color:var(--t);font:inherit}
-.g{display:grid;grid-template-columns:90px 1fr 1fr;gap:8px;align-items:end}.g label{margin-top:0}
-button{font:inherit;padding:9px 18px;border-radius:8px;border:1px solid var(--a);background:var(--a);color:#fff;cursor:pointer}button:disabled{opacity:.4;cursor:not-allowed}
-button.sec{background:none;color:var(--a)}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
-#msg{margin-top:8px;color:var(--ok)}#msg.err{color:var(--e)}.warn{color:var(--w);margin:6px 0 0}
-table{width:100%;border-collapse:collapse;margin-top:6px}td,th{text-align:left;padding:5px 8px;border-bottom:1px solid var(--b)}
+:root{color-scheme:light dark;--bg:#f5f6f8;--c:#fff;--t:#1d2430;--m:#6b7380;--b:#d5d9e0;--a:#7a3e9d;--ok:#1b7f4b;--w:#b45309;--e:#b42318;--i:#2f5f98}
+@media(prefers-color-scheme:dark){:root{--bg:#14171c;--c:#1e232b;--t:#e8ebf0;--m:#98a1ae;--b:#363d49;--a:#b98ae0;--ok:#4cc38a;--w:#f0a04b;--e:#ff7b72;--i:#8ab4f8}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font:16px/1.55 'Sarabun','TH Sarabun New',Tahoma,sans-serif}
+main{max-width:800px;margin:0 auto;padding:20px 16px 56px}h1{font-size:1.45rem;margin:.2em 0}h2{font-size:1.05rem;margin:0}
+.sub,.mut,small{color:var(--m)}
+.step{display:grid;grid-template-columns:38px 1fr;gap:12px;background:var(--c);border:1px solid var(--b);border-radius:12px;padding:14px 16px;margin:12px 0;transition:border-color .15s}
+.step.on{border-color:var(--a);border-style:dashed}.step.done{border-color:color-mix(in srgb,var(--ok) 55%,var(--b))}
+.num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:color-mix(in srgb,var(--a) 14%,var(--c));color:var(--a)}
+.step.done .num{background:color-mix(in srgb,var(--ok) 16%,var(--c));color:var(--ok)}
+.head{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.desc{font-size:.9rem;color:var(--m);margin:2px 0 8px}
+.file{margin-top:4px}.ok{color:var(--ok);font-weight:700}
+ul{list-style:none;margin:6px 0 0;padding:0}li{padding:4px 0;border-bottom:1px solid var(--b)}li:last-child{border:0}
+button{font:inherit;padding:8px 16px;border-radius:8px;border:1px solid var(--a);background:var(--a);color:#fff;cursor:pointer;white-space:nowrap}
+button:disabled{opacity:.4;cursor:not-allowed}button.sec{background:none;color:var(--a)}
+button.x{padding:0 7px;border:0;background:none;color:var(--m);font-size:.9rem}button.x:hover{color:var(--e)}
+input[type=file]{display:none}
+.note{font-size:.9rem;margin-top:4px;color:var(--m)}.note.err,.err{color:var(--e)}
+details{background:var(--c);border:1px solid var(--b);border-radius:12px;padding:12px 16px;margin:12px 0}summary{cursor:pointer;font-weight:600}
+label{display:block;font-size:.9rem;color:var(--m);margin:10px 0 2px}input[type=text]{width:100%;padding:7px 9px;border:1px solid var(--b);border-radius:6px;background:var(--bg);color:var(--t);font:inherit}
+.g{display:grid;grid-template-columns:80px 1fr 1fr;gap:8px;align-items:end}.g label{margin:0}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.go{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:16px}.go button{padding:11px 22px;font-size:1.05rem}
+#msg{margin-top:10px;color:var(--ok)}#msg.err{color:var(--e)}
+.warn{color:var(--w);margin:6px 0 0}.info{color:var(--i);margin:6px 0 0}
+table{width:100%;border-collapse:collapse;margin-top:10px;background:var(--c);border-radius:8px}td,th{text-align:left;padding:6px 10px;border-bottom:1px solid var(--b)}
+.tabs{font-size:.9rem;color:var(--m);margin-top:6px}
+@media(max-width:520px){.g{grid-template-columns:62px 1fr 1fr}.g3{grid-template-columns:1fr}}
 </style></head><body><main>
 <h1>ตัวแปลงรายงาน cn43n + zcn52n</h1>
-<p class="sub">โยนไฟล์ดิบจาก SAP ทั้งสองไฟล์ลงมา แล้วดาวน์โหลดผลลัพธ์เป็น .xlsx ประมวลผลในเครื่องนี้ทั้งหมด ไม่ส่งข้อมูลออกอินเทอร์เน็ต</p>
-<label id="dz"><input id="fi" type="file" accept=".xlsx,.XLSX" multiple>ลากไฟล์ <b>cn43n</b> และ <b>zcn52n</b> มาวางที่นี่ หรือคลิกเพื่อเลือก<br><small>เลือกพร้อมกันสองไฟล์ได้ ระบบดูจากหัวคอลัมน์ว่าไฟล์ไหนเป็นไฟล์ไหน</small></label>
-<div class="files"><b>cn43n</b><div id="fcn"></div><b>zcn52n</b><div id="fzc"></div></div>
-<details class="card" open><summary><b>ตั้งค่าตัวกรอง</b></summary>
-<label for="st">รหัสสถานะ (ตัวหลัง // ในคอลัมน์สถานะ) คั่นด้วยจุลภาค</label><input type="text" id="st">
-<label for="ap">หมายเลขผู้สมัครที่ต้องการ คั่นด้วยจุลภาค</label><input type="text" id="ap">
-<h2 style="margin-top:14px">แยกตามประเภทการเคลื่อนย้าย</h2>
-<div class="g"><label>ประเภท</label><label>ชื่อแท็บข้อมูล</label><label>ชื่อแท็บตารางสรุป</label>
-<input type="text" id="g0t"><input type="text" id="g0m"><input type="text" id="g0p">
-<input type="text" id="g1t"><input type="text" id="g1m"><input type="text" id="g1p"></div>
-<label><input type="checkbox" id="dr"> ตัดแถว zcn52n ที่ไม่พบ WBS ใน cn43n ที่กรองแล้วออก (ปกติคงไว้และเว้นช่อง lookup ว่าง)</label>
-<div class="row"><button class="sec" id="rs" type="button">คืนค่าเริ่มต้น</button></div></details>
-<div class="row"><button id="go" type="button" disabled>ประมวลผลและดาวน์โหลด .xlsx</button></div>
+<p class="sub">อัปโหลดไฟล์ดิบจาก SAP ทีละขั้น แล้วดาวน์โหลดผลเป็น .xlsx · ประมวลผลในเครื่องนี้ทั้งหมด ไม่ส่งข้อมูลออกอินเทอร์เน็ต</p>
+
+<section class="step" id="scn"><div class="num">1</div><div>
+  <div class="head"><h2>อัปโหลดไฟล์ cn43n</h2><button id="bcn" type="button">เลือกไฟล์</button></div>
+  <div class="desc">รายการ WBS (องค์ประกอบ WBS, ชื่อ, สถานะ, หมายเลขผู้สมัคร …) · ลากไฟล์มาวางในกรอบนี้ได้</div>
+  <div class="file" id="fcn"></div><div class="note" id="ncn"></div>
+  <input id="icn" type="file" accept=".xlsx,.XLSX"></div></section>
+
+<section class="step" id="szc"><div class="num">2</div><div>
+  <div class="head"><h2>อัปโหลดไฟล์ zcn52n</h2><button id="bzc" type="button">เลือกไฟล์</button></div>
+  <div class="desc">รายการวัสดุที่จอง (วัสดุ, ปริมาณความต้องการ, ปริมาณการเบิกจ่าย …)</div>
+  <div class="file" id="fzc"></div><div class="note" id="nzc"></div>
+  <input id="izc" type="file" accept=".xlsx,.XLSX"></div></section>
+
+<section class="step" id="sbk"><div class="num">3</div><div>
+  <div class="head"><h2>อัปโหลดไฟล์ booking ตามรหัสพนักงาน <small id="cbk">0/7</small></h2><button id="bbk" type="button">เพิ่มไฟล์</button></div>
+  <div class="desc">รายงานรายละเอียดใบจองพัสดุ (WRQSR02) ไฟล์ละ 1 รหัส สูงสุด 7 ไฟล์ · เลือกหลายไฟล์พร้อมกันได้ · ระบบอ่านรหัสจากคอลัมน์ ผู้จอง</div>
+  <ul id="fbk"></ul><div class="note" id="nbk"></div>
+  <input id="ibk" type="file" accept=".xlsx,.XLSX" multiple></div></section>
+
+<details><summary>ตั้งค่า (ตัวกรองและชื่อแท็บ)</summary>
+  <label for="st">รหัสสถานะ (ตัวหลัง // ในคอลัมน์สถานะ) คั่นด้วยจุลภาค</label><input type="text" id="st">
+  <label for="ap">หมายเลขผู้สมัครที่ต้องการ คั่นด้วยจุลภาค</label><input type="text" id="ap"><div class="note" id="aphint"></div>
+  <label style="margin-top:14px"><b>แยกตามประเภทการเคลื่อนย้าย</b></label>
+  <div class="g"><label>ประเภท</label><label>แท็บข้อมูล</label><label>แท็บสรุป (WBS)</label>
+    <input type="text" id="g0t"><input type="text" id="g0m"><input type="text" id="g0p">
+    <input type="text" id="g1t"><input type="text" id="g1m"><input type="text" id="g1p"></div>
+  <label for="xst"><b>แท็บข้อมูลเฉพาะแถวที่มีเลขที่ใบจองพัสดุ (จากแท็บข้อมูลแถวแรก)</b></label><input type="text" id="xst">
+  <label><b>แท็บสรุปเพิ่มเติม (เฉพาะประเภทแถวแรก)</b></label>
+  <div class="g3"><input type="text" id="xwb" aria-label="WBS booking"><input type="text" id="xm" aria-label="วัสดุ"><input type="text" id="xmb" aria-label="วัสดุ booking"></div>
+  <label><input type="checkbox" id="dr"> ตัดแถว zcn52n ที่ไม่พบ WBS ใน cn43n ที่กรองแล้วออก (ปกติคงไว้และเว้นช่อง lookup ว่าง)</label>
+  <div class="go" style="margin-top:10px"><button class="sec" id="rs" type="button">คืนค่าเริ่มต้น</button></div>
+</details>
+
+<div class="go"><button id="go" type="button" disabled>4 · ประมวลผลและดาวน์โหลด .xlsx</button><span class="mut" id="gohint"></span></div>
+<div class="tabs">แท็บในไฟล์ผลลัพธ์: Main 281 · main คลัง · Main 581 · WBS · WBS booking · วัสดุ · วัสดุ booking · WBS รื้อถอน · cn43n (กรอง) · แท็บ booking ตามรหัส</div>
 <div id="msg"></div><div id="sum"></div>
 </main>
 <script>/*! ExcelJS 19-10-2023 */
@@ -79,40 +116,108 @@ https://github.com/nodeca/pako/blob/main/LICENSE
  */function n(e){return e>=65&&e<=90||95===e||e>=97&&e<=122||e>=192&&e<=214||e>=216&&e<=246||e>=248&&e<=767||e>=880&&e<=893||e>=895&&e<=8191||e>=8204&&e<=8205||e>=8304&&e<=8591||e>=11264&&e<=12271||e>=12289&&e<=55295||e>=63744&&e<=64975||e>=65008&&e<=65533||e>=65536&&e<=983039}Object.defineProperty(r,"__esModule",{value:!0}),r.NC_NAME_START_CHAR="A-Z_a-z\xc0-\xd6\xd8-\xf6\xf8-\u02ff\u0370-\u037d\u037f-\u1fff\u200c-\u200d\u2070-\u218f\u2c00-\u2fef\u3001-\ud7ff\uf900-\ufdcf\ufdf0-\ufffd\ud800\udc00-\udb7f\udfff",r.NC_NAME_CHAR="-"+r.NC_NAME_START_CHAR+".0-9\xb7\u0300-\u036f\u203f-\u2040",r.NC_NAME_START_CHAR_RE=new RegExp("^["+r.NC_NAME_START_CHAR+"]$","u"),r.NC_NAME_CHAR_RE=new RegExp("^["+r.NC_NAME_CHAR+"]$","u"),r.NC_NAME_RE=new RegExp("^["+r.NC_NAME_START_CHAR+"]["+r.NC_NAME_CHAR+"]*$","u"),r.isNCNameStartChar=n,r.isNCNameChar=function(e){return n(e)||45===e||46===e||e>=48&&e<=57||183===e||e>=768&&e<=879||e>=8255&&e<=8256}},{}]},{},[15])(15)}));
 </script>
 <script>const R6=x=>Math.round(x*1e6)/1e6;
-const val=c=>{let v=c.value;if(v&&typeof v==='object'&&!(v instanceof Date))v=v.result!==undefined?v.result:v.richText?v.richText.map(t=>t.text).join(''):v.text!==undefined?v.text:'';return v==null?'':v};
+const cellv=c=>{if(c.type===ExcelJS.ValueType.Merge)return'';let v=c.value;if(v&&typeof v==='object'&&!(v instanceof Date))v=v.result!==undefined?v.result:v.richText?v.richText.map(t=>t.text).join(''):v.text!==undefined?v.text:'';return v==null?'':v};
 const num=v=>typeof v==='number'?v:(v===''||v==null?0:(Number(String(v).replace(/,/g,''))||0));
 const key=v=>String(v).trim().replace(/\.0+$/,'');
 const parseList=s=>String(s).split(/[,\s]+/).map(x=>x.trim()).filter(Boolean);
+const clean=v=>String(v).replace(/\s*\n\s*/g,'').trim();
 const L=i=>{let s='',n=i+1;while(n){const m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26)}return s};
-async function readSheet(buf){
-  const wb=new ExcelJS.Workbook();await wb.xlsx.load(buf);
-  const ws=wb.worksheets[0];if(!ws)throw new Error('ไม่พบชีตในไฟล์');
-  const h=[];ws.getRow(1).eachCell({includeEmpty:true},(c,i)=>{h[i-1]=String(val(c)).trim()});
-  const head=Array.from(h,x=>x||''),rows=[];
-  ws.eachRow((r,n)=>{if(n===1)return;const a=head.map((_,i)=>val(r.getCell(i+1)));if(a.some(v=>v!==''))rows.push(a)});
+const rowVals=(ws,n)=>{const a=[];ws.getRow(n).eachCell({includeEmpty:true},(c,i)=>{a[i-1]=cellv(c)});return a};
+function readStd(ws){
+  const head=Array.from(rowVals(ws,1),x=>String(x||'').trim()),rows=[];
+  ws.eachRow((r,n)=>{if(n===1)return;const a=head.map((_,i)=>cellv(r.getCell(i+1)));if(a.some(v=>v!==''))rows.push(a)});
   return{head,rows};
 }
+/* ---- fast reader for big WRQSR02 reports (ExcelJS is very slow on their thousands of merged cells) ---- */
+const dec=s=>s.replace(/&(lt|gt|quot|apos|amp|#\d+|#x[0-9a-fA-F]+);/g,(m,e)=>({lt:'<',gt:'>',quot:'"',apos:"'",amp:'&'}[e]||String.fromCodePoint(e[1]==='x'?parseInt(e.slice(2),16):+e.slice(1))));
+async function inflate(d){const rs=new ReadableStream({start(c){c.enqueue(d);c.close()}}).pipeThrough(new DecompressionStream('deflate-raw'));return new Uint8Array(await new Response(rs).arrayBuffer())}
+async function fastGrid(buf){
+  if(typeof DecompressionStream==='undefined')return null;
+  const u8=new Uint8Array(buf),dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength),td=new TextDecoder();
+  let e=u8.length-22;while(e>=0&&dv.getUint32(e,true)!==0x06054b50)e--;if(e<0)return null;
+  const cnt=dv.getUint16(e+10,true),ent={};let p=dv.getUint32(e+16,true);
+  for(let i=0;i<cnt&&dv.getUint32(p,true)===0x02014b50;i++){const nl=dv.getUint16(p+28,true),el=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true);
+    ent[td.decode(u8.subarray(p+46,p+46+nl))]={m:dv.getUint16(p+10,true),z:dv.getUint32(p+20,true),o:dv.getUint32(p+42,true)};p+=46+nl+el+cl}
+  const get=async n=>{const f=ent[n];if(!f)return'';const s=f.o+30+dv.getUint16(f.o+26,true)+dv.getUint16(f.o+28,true),d=u8.subarray(s,s+f.z);return td.decode(f.m===0?d:await inflate(d))};
+  const attr=(t,k)=>{const m=new RegExp('\\b'+k+'="([^"]*)"').exec(t);return m?m[1]:''};
+  const rid=attr((/<sheet\b[^>]*>/.exec(await get('xl/workbook.xml'))||[''])[0],'r:id');let tgt='worksheets/sheet1.xml';
+  for(const m of(await get('xl/_rels/workbook.xml.rels')).matchAll(/<Relationship\b[^>]*>/g))if(attr(m[0],'Id')===rid)tgt=attr(m[0],'Target').replace(/^\/?(xl\/)?/,'');
+  const ss=[];for(const m of(await get('xl/sharedStrings.xml')).matchAll(/<si\b[^>]*?(?:\/>|>([\s\S]*?)<\/si>)/g))
+    ss.push(dec([...(m[1]||'').replace(/<rPh\b[\s\S]*?<\/rPh>/g,'').matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g)].map(x=>x[1]).join('')));
+  const xml=await get('xl/'+tgt),grid=[];
+  for(const m of xml.matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)){
+    if(!m[2])continue;const rc=/\br="([A-Z]+)(\d+)"/.exec(m[1]);if(!rc)continue;
+    const t=attr(m[1],'t'),vm=/<v>([\s\S]*?)<\/v>/.exec(m[2]);let v;
+    if(t==='inlineStr')v=dec([...m[2].matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g)].map(x=>x[1]).join(''));
+    else if(!vm)continue;else if(t==='s')v=ss[+vm[1]];else if(t==='str')v=dec(vm[1]);else if(t==='b')v=vm[1]==='1';else if(t==='e')v='';else v=vm[1]===''?'':Number(vm[1]);
+    let ci=0;for(const ch of rc[1])ci=ci*26+ch.charCodeAt(0)-64;const ri=+rc[2]-1;(grid[ri]=grid[ri]||[])[ci-1]=v}
+  for(let i=0;i<grid.length;i++)grid[i]=Array.from(grid[i]||[],x=>x==null?'':x);
+  return grid;
+}
+const gridFromWs=ws=>{const g=[];for(let n=1;n<=ws.rowCount;n++)g.push(Array.from(rowVals(ws,n),x=>x==null?'':x));return g};
+function wrqFromGrid(g){
+  let hr=-1;for(let n=0;n<Math.min(g.length,30);n++){const h=Array.from(g[n]||[],clean);if(h.includes('เลขที่ใบจองพัสดุ')&&h.includes('หมายเหตุ')){hr=n;break}}
+  if(hr<0)return null;
+  const hv=Array.from(g[hr],clean),keep=[];hv.forEach((h,i)=>{if(h)keep.push(i)});
+  const head=keep.map(i=>hv[i]),ix=n=>head.indexOf(n);
+  const iRes=ix('เลขที่ใบจองพัสดุ'),iOrd=ix('เลขที่ใบเบิกโครงข่าย/ใบสั่งงาน'),iMat=ix('รหัสพัสดุ'),iNote=ix('หมายเหตุ'),iWho=ix('ผู้จอง');
+  if([iOrd,iMat,iWho].some(i=>i<0))throw new Error('ไฟล์ใบจองไม่มีคอลัมน์ ใบเบิกโครงข่าย/ใบสั่งงาน, รหัสพัสดุ หรือ ผู้จอง');
+  let who='';for(let n=0;n<hr;n++){const r=g[n]||[];const i=r.findIndex(x=>clean(x||'').startsWith('ผู้จอง'));if(i>=0){who=String(r.slice(i+1).find(x=>x!=='')||'').trim();break}}
+  const rows=[];
+  for(let n=hr+1;n<g.length;n++){const r=g[n];if(!r)continue;const a=keep.map(i=>r[i]===undefined?'':r[i]);if(a[iRes]!==''&&a[iMat]!==''&&a[iRes]!==head[iRes])rows.push(a)}
+  return{head,rows,iRes,iOrd,iMat,iNote,iWho,who};
+}
 const kindOf=h=>h.includes('วัสดุ')&&h.includes('ปริมาณความต้องการ')?'zc':(h.includes('ชื่อ')&&h.includes('หมายเลขผู้สมัคร')&&h.includes('สถานะ')?'cn':null);
+async function parseFile(buf){
+  let g=null;try{g=await fastGrid(buf)}catch(e){g=null}
+  if(g&&g[0]&&clean(g[0][0]||'')==='รายงานรายละเอียดใบจองพัสดุ'){const w=wrqFromGrid(g);if(w)return{kind:'wr',...w}}
+  const wb=new ExcelJS.Workbook();await wb.xlsx.load(buf);
+  const ws=wb.worksheets[0];if(!ws)throw new Error('ไม่พบชีตในไฟล์');
+  const d=readStd(ws),k=kindOf(d.head);if(k)return{kind:k,...d};
+  const w=g?null:wrqFromGrid(gridFromWs(ws));return w?{kind:'wr',...w}:null;
+}
 const need=(h,n,l)=>{const i=h.indexOf(n);if(i<0)throw new Error(l+' ไม่พบคอลัมน์ "'+n+'"');return i};
-function checkNames(S){
-  const n=['cn43n (กรอง)',...S.groups.flatMap(g=>[g.main,g.pivot])];
+function checkNames(S,codes){
+  const n=['cn43n (กรอง)',...S.groups.flatMap(g=>[g.main,g.pivot]),...Object.values(S.extra),...codes];
   for(const x of n)if(!x||x.length>31||/[\[\]:*?\/\\]/.test(x))return'ชื่อแท็บไม่ถูกต้อง: "'+x+'" (ห้ามว่าง ยาวเกิน 31 ตัว หรือมี [ ] : * ? / \\)';
   if(new Set(n.map(x=>x.toLowerCase())).size!==n.length)return'ชื่อแท็บซ้ำกัน';
   return'';
 }
-function build(cn,zc,S){
+const R7=['องค์ประกอบ WBS','ชื่องาน','หมายเลขผู้สมัคร','ผู้สมัคร','ใบสั่ง/โครงข่าย','วัสดุ','คำอธิบายของวัสดุ'],
+  M7=['วัสดุ','คำอธิบายของวัสดุ','องค์ประกอบ WBS','ชื่องาน','หมายเลขผู้สมัคร','ผู้สมัคร','ใบสั่ง/โครงข่าย'],B2=['เลขที่ใบจองพัสดุ','ผู้รับเหมา'];
+function pivot(head,rows,names,sub){
+  const fx=names.map(n=>head.indexOf(n)),vi=head.length-1,N=fx.length,sl=sub?names.indexOf(sub):-1,col=new Intl.Collator('th'),m=new Map();
+  for(const o of rows){const k=fx.map(i=>String(o[i])),kk=k.join('\u0001'),e=m.get(kk),v=o[vi];if(e)e.v=R6(e.v+v);else m.set(kk,{k,v})}
+  const list=[...m.values()].sort((a,b)=>{for(let i=0;i<N;i++){const c=col.compare(a.k[i],b.k[i]);if(c)return c}return 0});
+  const out=[],pre=k=>k.slice(0,sl+1).join('\u0001');let prev=null,gs=0;
+  const subRow=p=>{const r=Array(N).fill('');r[sl]=p[sl]+' Total';out.push({cells:[...r,R6(gs)],bold:1});gs=0};
+  for(const e of list){
+    if(sl>=0&&prev&&prev.length===N&&pre(prev)!==pre(e.k)){subRow(prev);prev=prev.slice(0,sl+1)}
+    let d=0;if(prev)while(d<prev.length&&prev[d]===e.k[d])d++;
+    out.push({cells:[...e.k.map((x,i)=>i>=d?x:''),e.v]});gs=R6(gs+e.v);prev=e.k;
+  }
+  if(sl>=0&&prev)subRow(prev);
+  out.push({cells:['Grand Total',...Array(N-1).fill(''),R6(list.reduce((s,e)=>s+e.v,0))],bold:1});
+  return{names,out};
+}
+function build(cn,zc,wr,S){
   const[cW,cN,cS,cA,cP]=['องค์ประกอบ WBS','ชื่อ','สถานะ','หมายเลขผู้สมัคร','ผู้สมัคร'].map(n=>need(cn.head,n,'cn43n'));
-  const st=new Set(S.statuses.map(s=>s.toUpperCase())),ap=new Set(S.applicants);
-  const cnF=[],map=new Map();
+  const st=new Set(S.statuses.map(s=>s.toUpperCase())),ap=new Set(S.applicants),cnF=[],map=new Map();
   for(const r of cn.rows){const m=/\/\/\s*(\S+)\s*$/.exec(String(r[cS]));
     if(m&&st.has(m[1].toUpperCase())&&ap.has(key(r[cA]))){cnF.push(r);map.set(String(r[cW]).trim(),r)}}
   const zh=zc.head;
   const[zW,zO,zM,zD,zH,zQ,zL,zT]=['องค์ประกอบ WBS','ใบสั่ง/โครงข่าย','วัสดุ','คำอธิบายของวัสดุ','จุดขนสินค้าลง','ปริมาณความต้องการ','ปริมาณการเบิกจ่าย','ประเภทการเคลื่อนย้าย'].map(n=>need(zh,n,'zcn52n'));
   const rest=zh.map((_,i)=>i).filter(i=>i!==zW);
-  const head=['องค์ประกอบ WBS','ชื่องาน','หมายเลขผู้สมัคร','ผู้สมัคร',...rest.map(i=>zh[i]),'คงเหลือ'];
-  const pos=i=>4+rest.indexOf(i);
-  const iH=pos(zH),iQ=pos(zQ),iL=pos(zL),iT=pos(zT);
-  const mains=S.groups.map(()=>[]),miss=new Set(),other={};let missRows=0,positive=0;
+  const base=['องค์ประกอบ WBS','ชื่องาน','หมายเลขผู้สมัคร','ผู้สมัคร',...rest.map(i=>zh[i]),'คงเหลือ'];
+  const pos=i=>4+rest.indexOf(i),iH=pos(zH),iQ=pos(zQ),iL=pos(zL),iT=pos(zT),pO=pos(zO),pM=pos(zM),dI=pos(zD)+1;
+  const heads=[[...base.slice(0,dI),...B2,...base.slice(dI)],base];
+  const att={};
+  for(const code of S.applicants){const w=wr[code];if(!w)continue;const byKey=new Map(),byRes=new Map();
+    for(const r of w.rows){const k=String(r[w.iOrd])+'|'+String(r[w.iMat]),res=String(r[w.iRes]),e=byKey.get(k);
+      if(!e)byKey.set(k,{res,multi:false});else if(e.res!==res)e.multi=true;
+      if(!byRes.has(res))byRes.set(res,w.iNote>=0?String(r[w.iNote]):'')}
+    att[code]={w,byKey,byRes}}
+  const mains=[[],[]],miss=new Set(),other={},bk={rows:0,hit:0,multi:0,blankNote:0};let missRows=0,positive=0;
   for(const r of zc.rows){
     const w=String(r[zW]).trim(),lk=map.get(w);
     if(!lk){miss.add(w);missRows++;if(S.drop)continue}
@@ -121,16 +226,20 @@ function build(cn,zc,S){
     if(!(rem>0))continue;
     positive++;o.push(rem);
     const t=String(o[iT]).trim(),g=S.groups.findIndex(x=>x.t===t);
-    if(g<0)other[t]=(other[t]||0)+1;else mains[g].push(o);
+    if(g<0){other[t]=(other[t]||0)+1;continue}
+    let row=o;
+    if(g===0){const a=att[key(o[2])],h=a&&a.byKey.get(String(o[pO])+'|'+String(o[pM])),res=h?h.res:'',note=res?a.byRes.get(res)||'':'';
+      bk.rows++;if(res){bk.hit++;if(h.multi)bk.multi++;if(!note)bk.blankNote++}
+      row=[...o.slice(0,dI),res,note,...o.slice(dI)]}
+    mains[g].push(row);
   }
-  const fx=[0,1,2,3,pos(zO),pos(zM),pos(zD)],col=new Intl.Collator('th');
-  const pivot=rows=>{const m=new Map();
-    for(const o of rows){const k=fx.map(i=>String(o[i])),kk=k.join('\u0001'),e=m.get(kk),v=o[o.length-1];if(e)e.v=R6(e.v+v);else m.set(kk,{k,v})}
-    return[...m.values()].sort((a,b)=>{for(let i=0;i<7;i++){const c=col.compare(a.k[i],b.k[i]);if(c)return c}return 0});};
-  const pivots=mains.map(pivot);
-  return{cnHead:cn.head,cnF,head,iH,iL,iQ,fields:fx.map(i=>head[i]),mains,pivots,
-    stats:{cnTotal:cn.rows.length,cnKept:cnF.length,zcTotal:zc.rows.length,missRows,miss:[...miss].slice(0,5),missN:miss.size,positive,other,
-      groups:S.groups.map((g,i)=>({t:g.t,rows:mains[i].length,sum:R6(mains[i].reduce((s,o)=>s+o[o.length-1],0))}))}};
+  const E=S.extra,defs=[[S.groups[0].pivot,0,R7],[E.wbsBooking,0,[...R7,...B2]],[E.mat,0,M7,'คำอธิบายของวัสดุ'],[E.matBooking,0,[...M7,...B2],'คำอธิบายของวัสดุ'],[S.groups[1].pivot,1,R7]];
+  const iBk=heads[0].indexOf('เลขที่ใบจองพัสดุ'),store=mains[0].filter(r=>String(r[iBk]).trim()!=='');
+  const pivots=defs.map(([name,g,names,sub])=>({name,...pivot(heads[g],mains[g],names,sub)}));
+  const attList=Object.keys(att).map(code=>{const w=att[code].w;return{code,w,last:w.rows.length+1,kc:w.head.length}});
+  return{cnHead:cn.head,cnF,heads,mains,store,pivots,attList,iH,iL,iQ,
+    stats:{store:store.length,storeSum:R6(store.reduce((s,o)=>s+o[o.length-1],0)),cnTotal:cn.rows.length,cnKept:cnF.length,zcTotal:zc.rows.length,missRows,miss:[...miss].slice(0,5),missN:miss.size,positive,other,bk,
+      noAtt:S.applicants.filter(c=>!wr[c]),groups:S.groups.map((g,i)=>({t:g.t,rows:mains[i].length,sum:R6(mains[i].reduce((s,o)=>s+o[o.length-1],0))}))}};
 }
 function makeWorkbook(res,S){
   const wb=new ExcelJS.Workbook();
@@ -139,71 +248,135 @@ function makeWorkbook(res,S){
     ws.addRow(head);rows.forEach((r,i)=>ws.addRow(fcol?fcol(r,i+2):r));
     ws.getRow(1).eachCell(c=>{c.font={bold:true};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFDDEBF7'}}});
     head.forEach((h,j)=>{const col=ws.getColumn(j+1);let w=String(h).length+2;
-      rows.slice(0,300).forEach(r=>{const v=r[j];w=Math.max(w,v instanceof Date?11:String(v??'').length*1.1+1)});
+      rows.slice(0,300).forEach(r=>{let v=r[j];w=Math.max(w,v instanceof Date?11:String(v??'').length*1.1+1)});
       col.width=Math.min(48,Math.max(10,w));
-      col.eachCell((c,n)=>{if(n>1){if(typeof c.value==='number'||(c.value&&c.value.formula))c.numFmt='#,##0.00';else if(c.value instanceof Date)c.numFmt='dd/mm/yyyy'}})});
+      col.eachCell((c,n)=>{if(n>1){const v=c.value;if(typeof v==='number'||(v&&typeof v.result==='number'))c.numFmt='#,##0.00';else if(v instanceof Date)c.numFmt='dd/mm/yyyy'}})});
     if(rows.length)ws.autoFilter={from:{row:1,column:1},to:{row:rows.length+1,column:head.length}};
     return ws};
-  const pv=(name,list)=>{let prev=null;
-    const rows=list.map(e=>{let d=prev?e.k.findIndex((x,i)=>x!==prev[i]):0;if(d<0)d=7;prev=e.k;return[...e.k.map((x,i)=>i>=d?x:''),e.v]});
-    rows.push(['Grand Total',...Array(6).fill(''),R6(list.reduce((s,e)=>s+e.v,0))]);
-    const ws=sheet(name,[...res.fields,'Sum of คงเหลือ'],rows);ws.getRow(rows.length+1).font={bold:true};ws.autoFilter=undefined};
-  S.groups.forEach((g,i)=>sheet(g.main,res.head,res.mains[i],(r,n)=>[...r.slice(0,-1),{formula:`${L(res.iQ)}${n}-${L(res.iL)}${n}-${L(res.iH)}${n}`,result:r[r.length-1]}]));
-  S.groups.forEach((g,i)=>pv(g.pivot,res.pivots[i]));
+  const hs=res.heads[0],iE=hs.indexOf('ใบสั่ง/โครงข่าย'),iF=hs.indexOf('วัสดุ'),iB=hs.indexOf('เลขที่ใบจองพัสดุ'),iN=iB+1,A=res.attList,lastC=hs.length-1;
+  const chain=(n,fn)=>A.reduceRight((acc,a)=>`IF($C${n}="${a.code}",${fn(a)},${acc})`,'""');
+  const rng=(a,i)=>`'${a.code}'!$${L(i)}$2:$${L(i)}$${a.last}`;
+  const f0=(r,n)=>{const o=[...r];
+    if(A.length){
+      o[iB]={formula:`IFERROR(${chain(n,a=>`INDEX(${rng(a,a.w.iRes)},MATCH($${L(iE)}${n}&"|"&$${L(iF)}${n},${rng(a,a.kc)},0))`)},"")`,result:r[iB]};
+      if(A.every(a=>a.w.iNote>=0))o[iN]={formula:`IF($${L(iB)}${n}="","",IFERROR(${chain(n,a=>`INDEX(${rng(a,a.w.iNote)},MATCH($${L(iB)}${n},${rng(a,a.w.iRes)},0))`)}&"",""))`,result:r[iN]}}
+    o[lastC]={formula:`${L(hs.indexOf('ปริมาณความต้องการ'))}${n}-${L(hs.indexOf('ปริมาณการเบิกจ่าย'))}${n}-${L(hs.indexOf('จุดขนสินค้าลง'))}${n}`,result:r[lastC]};return o};
+  const hb=res.heads[1],f1=(r,n)=>[...r.slice(0,-1),{formula:`${L(res.iQ)}${n}-${L(res.iL)}${n}-${L(res.iH)}${n}`,result:r[r.length-1]}];
+  sheet(S.groups[0].main,hs,res.mains[0],f0);sheet(S.extra.store,hs,res.store,f0);sheet(S.groups[1].main,hb,res.mains[1],f1);
+  res.pivots.forEach(p=>{const ws=sheet(p.name,[...p.names,'Sum of คงเหลือ'],p.out.map(o=>o.cells));ws.autoFilter=undefined;
+    p.out.forEach((o,i)=>{if(o.bold)ws.getRow(i+2).font={bold:true}})});
   sheet('cn43n (กรอง)',res.cnHead,res.cnF);
+  A.forEach(a=>{const w=a.w;
+    sheet(a.code,[...w.head,'คีย์ (ใบสั่ง|รหัสพัสดุ)'],w.rows,(r,n)=>[...r,{formula:`${L(w.iOrd)}${n}&"|"&${L(w.iMat)}${n}`,result:String(r[w.iOrd])+'|'+String(r[w.iMat])}])});
   return wb;
 }
 
-const $=s=>document.querySelector(s),LS='cn43n-zcn52n-tool-v1';
-const DEF={statuses:'C1, C3, D1',applicants:'505636, 509959',drop:false,groups:[{t:'281',main:'Main 281',pivot:'WBS'},{t:'581',main:'Main 581',pivot:'WBS รื้อถอน'}]};
-const D={cn:null,zc:null},NAME={cn:'cn43n',zc:'zcn52n'};
-const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-const fmt=n=>n.toLocaleString('en-US',{maximumFractionDigits:2});
+const $=s=>document.querySelector(s),LS='cn43n-zcn52n-tool-v2',MAXB=7;
+const DEF={statuses:'C1, C3, D1',applicants:'505636, 509959',drop:false,
+  groups:[{t:'281',main:'Main 281',pivot:'WBS'},{t:'581',main:'Main 581',pivot:'WBS รื้อถอน'}],
+  extra:{store:'main คลัง',wbsBooking:'WBS booking',mat:'วัสดุ',matBooking:'วัสดุ booking'}};
+const D={cn:null,zc:null,bk:[]};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=n=>Number(n).toLocaleString('en-US',{maximumFractionDigits:2});
 function fill(S){$('#st').value=S.statuses;$('#ap').value=S.applicants;$('#dr').checked=!!S.drop;
-  S.groups.forEach((g,i)=>{$('#g'+i+'t').value=g.t;$('#g'+i+'m').value=g.main;$('#g'+i+'p').value=g.pivot})}
+  S.groups.forEach((g,i)=>{$('#g'+i+'t').value=g.t;$('#g'+i+'m').value=g.main;$('#g'+i+'p').value=g.pivot});
+  $('#xst').value=S.extra.store;$('#xwb').value=S.extra.wbsBooking;$('#xm').value=S.extra.mat;$('#xmb').value=S.extra.matBooking}
 const read=()=>({statuses:$('#st').value,applicants:$('#ap').value,drop:$('#dr').checked,
-  groups:[0,1].map(i=>({t:$('#g'+i+'t').value.trim(),main:$('#g'+i+'m').value.trim(),pivot:$('#g'+i+'p').value.trim()}))});
-const norm=S=>({...S,statuses:parseList(S.statuses),applicants:parseList(S.applicants)});
+  groups:[0,1].map(i=>({t:$('#g'+i+'t').value.trim(),main:$('#g'+i+'m').value.trim(),pivot:$('#g'+i+'p').value.trim()})),
+  extra:{store:$('#xst').value.trim(),wbsBooking:$('#xwb').value.trim(),mat:$('#xm').value.trim(),matBooking:$('#xmb').value.trim()}});
 function msg(t,bad){const e=$('#msg');e.className=bad?'err':'';e.textContent=t}
-function status(){for(const k of['cn','zc'])$('#f'+k).innerHTML=D[k]?'✓ '+esc(D[k].name)+' <small>('+fmt(D[k].rows.length)+' แถว)</small>':'<span class="mut">รอไฟล์</span>';
-  $('#go').disabled=!(D.cn&&D.zc)}
-async function addFiles(list){
-  for(const f of list){try{const d=await readSheet(await f.arrayBuffer()),k=kindOf(d.head);
-    if(!k)msg('ไม่รู้จักไฟล์ "'+f.name+'" (ไม่พบหัวคอลัมน์ของ cn43n หรือ zcn52n)',1);else{D[k]={name:f.name,...d};msg('')}}
-  catch(e){msg('อ่านไฟล์ "'+f.name+'" ไม่ได้: '+e.message,1)}}
-  status()}
+function stepMsg(id,t,bad){const e=$(id);e.className='note'+(bad?' err':'');e.textContent=t}
+function render(){
+  for(const k of['cn','zc']){
+    $('#s'+k).classList.toggle('done',!!D[k]);
+    $('#f'+k).innerHTML=D[k]?'<span class="ok">✓</span> '+esc(D[k].name)+' <small>('+fmt(D[k].rows.length)+' แถว)</small> <button class="x" data-k="'+k+'" title="เอาออก" type="button">✕</button>':'<span class="mut">ยังไม่ได้เลือกไฟล์</span>';
+    $('#b'+k).textContent=D[k]?'เปลี่ยนไฟล์':'เลือกไฟล์'}
+  $('#fbk').innerHTML=D.bk.length?D.bk.map((b,i)=>'<li><span class="ok">✓</span> <b>'+esc(b.code)+'</b> '+esc(b.who.replace(/^\d+\s*/,''))+' <small>· '+esc(b.name)+' · '+fmt(b.rows.length)+' แถว</small> <button class="x" data-b="'+i+'" title="เอาออก" type="button">✕</button></li>').join(''):'<li class="mut">ยังไม่ได้เลือกไฟล์</li>';
+  $('#sbk').classList.toggle('done',D.bk.length>0);
+  $('#cbk').textContent=D.bk.length+'/'+MAXB;
+  $('#bbk').disabled=D.bk.length>=MAXB;
+  $('#go').disabled=!(D.cn&&D.zc);
+  $('#gohint').textContent=!(D.cn&&D.zc)?'ต้องมีไฟล์ cn43n และ zcn52n ก่อน':(D.bk.length?'':'ยังไม่มีไฟล์ booking — ทำได้ แต่ช่อง เลขที่ใบจองพัสดุ/ผู้รับเหมา จะว่าง');
+  document.querySelectorAll('button.x').forEach(b=>b.onclick=()=>{if(b.dataset.k)D[b.dataset.k]=null;else D.bk.splice(+b.dataset.b,1);render()});
+}
+const parse=async f=>parseFile(await f.arrayBuffer());
+const KN={cn:'cn43n',zc:'zcn52n',wr:'booking (ใบจองพัสดุ)'};
+async function loadOne(kind,f){
+  const id='#n'+kind;stepMsg(id,'กำลังอ่าน '+f.name+' …');
+  try{const p=await parse(f);
+    if(!p||p.kind!==kind)return stepMsg(id,'ไฟล์ "'+f.name+'" '+(p?'เป็นไฟล์ '+KN[p.kind]:'ไม่ใช่ไฟล์ที่รู้จัก')+' ไม่ใช่ไฟล์ '+KN[kind],1);
+    D[kind]={name:f.name,...p};stepMsg(id,'')}
+  catch(e){stepMsg(id,'อ่านไฟล์ "'+f.name+'" ไม่ได้: '+e.message,1)}
+  render()}
+async function loadBk(files){
+  const out=[];let bad=false;
+  for(const f of files){
+    stepMsg('#nbk','กำลังอ่าน '+f.name+' …');
+    try{const p=await parse(f);
+      if(!p||p.kind!=='wr'){out.push('"'+f.name+'" '+(p?'เป็นไฟล์ '+KN[p.kind]+' ใส่ในขั้นที่ '+(p.kind==='cn'?1:2):'ไม่ใช่รายงานใบจองพัสดุ (WRQSR02)'));bad=true;continue}
+      const by={};for(const r of p.rows){const k=key(r[p.iWho]);(by[k]=by[k]||[]).push(r)}
+      const codes=Object.keys(by);if(!codes.length){out.push('"'+f.name+'" ไม่มีรายการ');bad=true;continue}
+      for(const c of codes){
+        const ent={...p,rows:by[c],code:c,name:f.name,who:codes.length===1?p.who:''},i=D.bk.findIndex(b=>b.code===c);
+        if(i>=0){D.bk[i]=ent;out.push('รหัส '+c+' มีอยู่แล้ว แทนที่ด้วยไฟล์ใหม่')}
+        else if(D.bk.length<MAXB)D.bk.push(ent);else{out.push('ครบ '+MAXB+' ไฟล์แล้ว ข้ามรหัส '+c);bad=true}
+      }
+    }catch(e){out.push('อ่าน "'+f.name+'" ไม่ได้: '+e.message);bad=true}
+  }
+  stepMsg('#nbk',out.join(' · '),bad);syncApplicants();render()}
+function syncApplicants(){
+  const cur=parseList($('#ap').value),add=D.bk.map(b=>b.code).filter(c=>!cur.includes(c));
+  if(add.length){$('#ap').value=[...cur,...add].join(', ');$('#aphint').textContent='เพิ่มรหัส '+add.join(', ')+' จากไฟล์ booking ให้อัตโนมัติ'}}
 async function run(){
-  const raw=read(),S=norm(raw);
+  const raw=read(),S={...raw,statuses:parseList(raw.statuses),applicants:parseList(raw.applicants)};
   if(!S.statuses.length||!S.applicants.length)return msg('กรอกรหัสสถานะและหมายเลขผู้สมัครอย่างน้อย 1 ค่า',1);
-  const bad=checkNames(S);if(bad)return msg(bad,1);
+  const wr={};for(const b of D.bk)if(S.applicants.includes(b.code))wr[b.code]=b;
+  const bad=checkNames(S,Object.keys(wr));if(bad)return msg(bad,1);
   try{localStorage.setItem(LS,JSON.stringify(raw))}catch(e){}
-  $('#go').disabled=true;msg('กำลังประมวลผล…');
+  $('#go').disabled=true;msg('กำลังประมวลผล…');$('#sum').innerHTML='';
+  await new Promise(r=>setTimeout(r,30));
   try{
-    const res=build(D.cn,D.zc,S),wb=makeWorkbook(res,S),buf=await wb.xlsx.writeBuffer(),
+    const res=build(D.cn,D.zc,wr,S),wb=makeWorkbook(res,S),buf=await wb.xlsx.writeBuffer(),
       d=new Date(),ymd=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'),
       a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
-    a.download='zcn52n_result_'+ymd+'.xlsx';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-    const s=res.stats,w=[];
+    a.download='zcn52n_result_'+ymd+'.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+    const s=res.stats,bk=s.bk,w=[];
     if(!s.cnKept)w.push('ไม่มีแถวใน cn43n ที่ตรงเงื่อนไข ตรวจรหัสสถานะ/หมายเลขผู้สมัครอีกครั้ง');
-    if(s.missRows)w.push(s.missRows+' แถวใน zcn52n ไม่พบ WBS ใน cn43n ที่กรองแล้ว ('+s.missN+' WBS เช่น '+s.miss.map(esc).join(', ')+')'+(S.drop?' — ตัดออกแล้ว':' — คงไว้โดยเว้นช่อง lookup ว่าง'));
-    for(const t in s.other)w.push(s.other[t]+' แถวมีประเภทการเคลื่อนย้าย "'+esc(t)+'" ซึ่งไม่อยู่ในแท็บที่ตั้งไว้ จึงไม่ถูกนำมาใส่');
-    $('#sum').innerHTML='<table><tr><th>รายการ</th><th>จำนวน</th></tr><tr><td>cn43n ทั้งหมด → ผ่านตัวกรอง</td><td>'+fmt(s.cnTotal)+' → '+fmt(s.cnKept)+'</td></tr>'+
+    if(s.missRows)w.push(fmt(s.missRows)+' แถวใน zcn52n ไม่พบ WBS ใน cn43n ที่กรองแล้ว ('+s.missN+' WBS เช่น '+s.miss.map(esc).join(', ')+')'+(S.drop?' — ตัดออกแล้ว':' — คงไว้โดยเว้นช่อง lookup ว่าง'));
+    for(const t in s.other)w.push(fmt(s.other[t])+' แถวมีประเภทการเคลื่อนย้าย "'+esc(t)+'" ซึ่งไม่ได้ตั้งไว้ จึงไม่ถูกนำมาใส่');
+    if(s.noAtt.length)w.push('ไม่มีไฟล์ booking ของรหัส '+s.noAtt.map(esc).join(', ')+' — เลขที่ใบจองพัสดุของรหัสนี้จะว่าง');
+    const unused=D.bk.filter(b=>!S.applicants.includes(b.code)).map(b=>b.code);
+    if(unused.length)w.push('ไฟล์ booking รหัส '+unused.map(esc).join(', ')+' ไม่อยู่ในหมายเลขผู้สมัครที่ตั้งไว้ จึงไม่ถูกใช้');
+    $('#sum').innerHTML='<table><tr><th>รายการ</th><th>ผล</th></tr>'+
+      '<tr><td>cn43n ทั้งหมด → ผ่านตัวกรอง</td><td>'+fmt(s.cnTotal)+' → '+fmt(s.cnKept)+'</td></tr>'+
       '<tr><td>zcn52n ทั้งหมด → คงเหลือ &gt; 0</td><td>'+fmt(s.zcTotal)+' → '+fmt(s.positive)+'</td></tr>'+
-      s.groups.map((g,i)=>'<tr><td>'+esc(S.groups[i].main)+' (ประเภท '+esc(g.t)+')</td><td>'+fmt(g.rows)+' แถว · ผลรวมคงเหลือ '+fmt(g.sum)+'</td></tr>').join('')+'</table>'+
+      s.groups.map((g,i)=>'<tr><td>'+esc(S.groups[i].main)+' (ประเภท '+esc(g.t)+')</td><td>'+fmt(g.rows)+' แถว · คงเหลือรวม '+fmt(g.sum)+'</td></tr>').join('')+
+      '<tr><td>พบเลขที่ใบจองพัสดุ ('+esc(S.groups[0].main)+')</td><td>'+fmt(bk.hit)+' / '+fmt(bk.rows)+' แถว</td></tr>'+
+      '<tr><td>'+esc(S.extra.store)+' (มีเลขที่ใบจอง)</td><td>'+fmt(s.store)+' แถว · คงเหลือรวม '+fmt(s.storeSum)+'</td></tr></table>'+
+      (bk.rows-bk.hit?'<p class="info">ℹ '+fmt(bk.rows-bk.hit)+' แถวไม่พบใบจอง (ใบสั่ง+วัสดุ ไม่อยู่ในไฟล์ booking) ช่องจะว่าง</p>':'')+
+      (bk.blankNote?'<p class="info">ℹ '+fmt(bk.blankNote)+' แถวพบใบจอง แต่ หมายเหตุ ในไฟล์ booking ว่าง → ผู้รับเหมาว่าง</p>':'')+
+      (bk.multi?'<p class="info">ℹ '+fmt(bk.multi)+' แถวมีใบจองให้เลือกมากกว่า 1 ใบ ใช้ใบแรกที่พบ</p>':'')+
       w.map(x=>'<p class="warn">⚠ '+x+'</p>').join('');
     msg('เสร็จแล้ว — ดาวน์โหลดไฟล์ '+a.download);
-  }catch(e){msg('ผิดพลาด: '+e.message,1)}
-  status()}
+  }catch(e){msg('ผิดพลาด: '+e.message,1);console.error(e)}
+  render()}
+function wireDrop(el,fn){
+  ['dragover','dragenter'].forEach(v=>el.addEventListener(v,e=>{e.preventDefault();el.classList.add('on')}));
+  ['dragleave','drop'].forEach(v=>el.addEventListener(v,e=>{e.preventDefault();el.classList.remove('on')}));
+  el.addEventListener('drop',e=>fn([...e.dataTransfer.files]))}
 (function init(){
-  let S=DEF;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem(LS)||'{}'))}catch(e){}
-  fill(S);status();
-  const dz=$('#dz');
-  $('#fi').onchange=e=>{addFiles(e.target.files);e.target.value=''};
-  ['dragover','dragenter'].forEach(v=>dz.addEventListener(v,e=>{e.preventDefault();dz.classList.add('on')}));
-  ['dragleave','drop'].forEach(v=>dz.addEventListener(v,e=>{e.preventDefault();dz.classList.remove('on')}));
-  dz.addEventListener('drop',e=>addFiles(e.dataTransfer.files));
-  $('#go').onclick=run;$('#rs').onclick=()=>{fill(DEF);try{localStorage.removeItem(LS)}catch(e){}};
+  let S=DEF;try{const s=JSON.parse(localStorage.getItem(LS)||'{}');S={...DEF,...s,extra:{...DEF.extra,...(s.extra||{})}}}catch(e){}
+  fill(S);render();
+  for(const k of['cn','zc']){
+    $('#b'+k).onclick=()=>$('#i'+k).click();
+    $('#i'+k).onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)loadOne(k,f)};
+    wireDrop($('#s'+k),fs=>fs[0]&&loadOne(k,fs[0]))}
+  $('#bbk').onclick=()=>$('#ibk').click();
+  $('#ibk').onchange=e=>{const fs=[...e.target.files];e.target.value='';if(fs.length)loadBk(fs)};
+  wireDrop($('#sbk'),loadBk);
+  $('#go').onclick=run;
+  $('#rs').onclick=()=>{fill(DEF);try{localStorage.removeItem(LS)}catch(e){};$('#aphint').textContent=''};
 })();
 </script>
 </body></html>
