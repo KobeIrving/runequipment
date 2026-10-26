@@ -41,6 +41,8 @@ input[type=checkbox]{accent-color:var(--t)}
 table{width:100%;border-collapse:collapse;margin-top:12px;background:var(--c)}
 td,th{text-align:left;padding:6px 10px;border-bottom:1px solid var(--d)}th{color:var(--hi)}td:last-child{color:var(--hi)}
 .tabs{font-size:.9rem;color:var(--m);margin-top:8px}
+.mapbox{background:var(--c);border:1px solid var(--w);border-radius:8px;padding:12px 16px;margin:14px 0}.mapbox>b{color:var(--w)}
+select{width:100%;padding:7px 9px;border:1px solid var(--d);border-radius:5px;background:#000;color:var(--t);font:inherit}
 ::selection{background:var(--t);color:#000}
 @media(max-width:520px){.g{grid-template-columns:62px 1fr 1fr}.g3{grid-template-columns:1fr}}
 </style></head><body><main>
@@ -50,12 +52,13 @@ td,th{text-align:left;padding:6px 10px;border-bottom:1px solid var(--d)}th{color
 <div id="dz" role="button" tabindex="0" aria-label="อัปโหลดไฟล์">
   <span class="ico">[ + ]</span>
   <span class="big">ลากไฟล์ทั้งหมดมาวางที่นี่ หรือคลิกเพื่อเลือก</span><br>
-  <small>cn43n · zcn52n · booking ตามรหัสพนักงาน (สูงสุด 7 ไฟล์) — เลือกพร้อมกันทีเดียวได้ จะทยอยเพิ่มก็ได้</small>
+  <small>ไฟล์ที่ชื่อมีคำว่า <b>cn43n</b> และ <b>zcn52n</b> (ตัวเล็ก/ใหญ่ก็ได้) · booking ตามรหัสพนักงาน ไม่บังคับ (สูงสุด 7 ไฟล์) — เลือกพร้อมกันทีเดียวได้</small>
 </div>
 <input id="fi" type="file" accept=".xlsx,.XLSX" multiple>
 <div class="note" id="nup"></div>
 
 <div class="box"><ul id="list"></ul></div>
+<div id="map"></div>
 
 <details><summary>ตั้งค่า (ตัวกรองและชื่อแท็บ)</summary>
   <label for="st">รหัสสถานะ (ตัวหลัง // ในคอลัมน์สถานะ) คั่นด้วยจุลภาค</label><input type="text" id="st">
@@ -128,10 +131,21 @@ const parseList=s=>String(s).split(/[,\s]+/).map(x=>x.trim()).filter(Boolean);
 const clean=v=>String(v).replace(/\s*\n\s*/g,'').trim();
 const L=i=>{let s='',n=i+1;while(n){const m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26)}return s};
 const rowVals=(ws,n)=>{const a=[];ws.getRow(n).eachCell({includeEmpty:true},(c,i)=>{a[i-1]=cellv(c)});return a};
+const ALIAS={'appl.no.':'หมายเลขผู้สมัคร','applno':'หมายเลขผู้สมัคร','วท.ชำระ':'วันที่ชำระเงิน',
+  'order/ntwk':'ใบสั่ง/โครงข่าย','order/netwk':'ใบสั่ง/โครงข่าย','order/network':'ใบสั่ง/โครงข่าย','จุดขนส/คลง':'จุดขนสินค้าลง',
+  'ปม.ต้องการ':'ปริมาณความต้องการ','ปริมาณeun':'ปริมาณในหน่วยบันทึก หน่วยของรายการ','วันต้องการ':'วันที่ความต้องการ',
+  'ปริมาณเบิก':'ปริมาณการเบิกจ่าย','ราคา':'ราคา/สกุลเงิน','mvt':'ประเภทการเคลื่อนย้าย','การจอง':'เลขที่จอง'};
+const nkey=h=>String(h||'').trim().toLowerCase().replace(/\s+/g,'');
+let USERMAP={};try{USERMAP=JSON.parse(localStorage.getItem('cn43n-zcn52n-colmap')||'{}')||{}}catch(e){USERMAP={}}
+const canon=h=>{const s=String(h||'').trim(),k=nkey(s);return USERMAP[k]||ALIAS[k]||s};
+const REQ={cn:['องค์ประกอบ WBS','ชื่อ','สถานะ','หมายเลขผู้สมัคร','ผู้สมัคร'],
+  zc:['องค์ประกอบ WBS','ใบสั่ง/โครงข่าย','วัสดุ','คำอธิบายของวัสดุ','จุดขนสินค้าลง','ปริมาณความต้องการ','ปริมาณการเบิกจ่าย','ประเภทการเคลื่อนย้าย']};
+const missingCols=(kind,head)=>(REQ[kind]||[]).filter(n=>!head.includes(n));
+function applyMap(f){f.head=f.raw.map(canon);return f}
 function readStd(ws){
-  const head=Array.from(rowVals(ws,1),x=>String(x||'').trim()),rows=[];
+  const raw=Array.from(rowVals(ws,1),x=>String(x||'').trim()),head=raw.map(canon),rows=[];
   ws.eachRow((r,n)=>{if(n===1)return;const a=head.map((_,i)=>cellv(r.getCell(i+1)));if(a.some(v=>v!==''))rows.push(a)});
-  return{head,rows};
+  return{head,raw,rows};
 }
 /* ---- fast reader for big WRQSR02 reports (ExcelJS is very slow on their thousands of merged cells) ---- */
 const dec=s=>s.replace(/&(lt|gt|quot|apos|amp|#\d+|#x[0-9a-fA-F]+);/g,(m,e)=>({lt:'<',gt:'>',quot:'"',apos:"'",amp:'&'}[e]||String.fromCodePoint(e[1]==='x'?parseInt(e.slice(2),16):+e.slice(1))));
@@ -173,12 +187,17 @@ function wrqFromGrid(g){
   return{head,rows,iRes,iOrd,iMat,iNote,iWho,who};
 }
 const kindOf=h=>h.includes('วัสดุ')&&h.includes('ปริมาณความต้องการ')?'zc':(h.includes('ชื่อ')&&h.includes('หมายเลขผู้สมัคร')&&h.includes('สถานะ')?'cn':null);
-async function parseFile(buf){
-  let g=null;try{g=await fastGrid(buf)}catch(e){g=null}
-  if(g&&g[0]&&clean(g[0][0]||'')==='รายงานรายละเอียดใบจองพัสดุ'){const w=wrqFromGrid(g);if(w)return{kind:'wr',...w}}
+const kindFromName=n=>{n=String(n||'').toLowerCase();return n.includes('zcn52n')?'zc':(n.includes('cn43n')?'cn':null)};
+async function parseFile(buf,name){
+  const nk=kindFromName(name);
+  let g=null;
+  if(!nk){try{g=await fastGrid(buf)}catch(e){g=null}
+    if(g&&g[0]&&clean(g[0][0]||'')==='รายงานรายละเอียดใบจองพัสดุ'){const w=wrqFromGrid(g);if(w)return{kind:'wr',...w}}}
   const wb=new ExcelJS.Workbook();await wb.xlsx.load(buf);
   const ws=wb.worksheets[0];if(!ws)throw new Error('ไม่พบชีตในไฟล์');
-  const d=readStd(ws),k=kindOf(d.head);if(k)return{kind:k,...d};
+  const d=readStd(ws);
+  if(nk)return{kind:nk,byName:true,...d};
+  const k=kindOf(d.head);if(k)return{kind:k,...d};
   const w=g?null:wrqFromGrid(gridFromWs(ws));return w?{kind:'wr',...w}:null;
 }
 const need=(h,n,l)=>{const i=h.indexOf(n);if(i<0)throw new Error(l+' ไม่พบคอลัมน์ "'+n+'"');return i};
@@ -211,6 +230,7 @@ function build(cn,zc,wr,S){
   const st=new Set(S.statuses.map(s=>s.toUpperCase())),ap=new Set(S.applicants),cnF=[],map=new Map();
   for(const r of cn.rows){const m=/\/\/\s*(\S+)\s*$/.exec(String(r[cS]));
     if(m&&st.has(m[1].toUpperCase())&&ap.has(key(r[cA]))){cnF.push(r);map.set(String(r[cW]).trim(),r)}}
+  const sugg={};if(!cnF.length)for(const r of cn.rows){const m=/\/\/\s*(\S+)\s*$/.exec(String(r[cS]));if(m&&st.has(m[1].toUpperCase())){const a=key(r[cA]);if(a&&a!=='0'){const e=sugg[a]||(sugg[a]={n:0,who:String(r[cP]||'').trim()});e.n++}}}
   const zh=zc.head;
   const[zW,zO,zM,zD,zH,zQ,zL,zT]=['องค์ประกอบ WBS','ใบสั่ง/โครงข่าย','วัสดุ','คำอธิบายของวัสดุ','จุดขนสินค้าลง','ปริมาณความต้องการ','ปริมาณการเบิกจ่าย','ประเภทการเคลื่อนย้าย'].map(n=>need(zh,n,'zcn52n'));
   const rest=zh.map((_,i)=>i).filter(i=>i!==zW);
@@ -247,7 +267,7 @@ function build(cn,zc,wr,S){
   const pivots=defs.map(([name,rows,names,sub])=>({name,...pivot(heads[rows===mains[1]?1:0],rows,names,sub)}));
   const attList=Object.keys(att).map(code=>{const w=att[code].w;return{code,w,last:w.rows.length+1,kc:w.head.length}});
   return{cnHead:cn.head,cnF,heads,mains,store,bud,pivots,attList,iH,iL,iQ,
-    stats:{store:store.length,storeSum:R6(store.reduce((s,o)=>s+o[o.length-2],0)),bud:BUD.map(b=>({b,rows:bud[b].length,sum:R6(bud[b].reduce((s,o)=>s+o[o.length-2],0))})),budOther,cnTotal:cn.rows.length,cnKept:cnF.length,zcTotal:zc.rows.length,missRows,miss:[...miss].slice(0,5),missN:miss.size,positive,other,bk,
+    stats:{sugg:Object.entries(sugg).sort((a,b)=>b[1].n-a[1].n).slice(0,10),store:store.length,storeSum:R6(store.reduce((s,o)=>s+o[o.length-2],0)),bud:BUD.map(b=>({b,rows:bud[b].length,sum:R6(bud[b].reduce((s,o)=>s+o[o.length-2],0))})),budOther,cnTotal:cn.rows.length,cnKept:cnF.length,zcTotal:zc.rows.length,missRows,miss:[...miss].slice(0,5),missN:miss.size,positive,other,bk,
       noAtt:S.applicants.filter(c=>!wr[c]),groups:S.groups.map((g,i)=>({t:g.t,rows:mains[i].length,sum:R6(mains[i].reduce((s,o)=>s+o[o.length-1],0))}))}};
 }
 function makeWorkbook(res,S){
@@ -302,17 +322,39 @@ function render(){
   h+='<li class="'+(D.bk.length?'done':'')+'"><span class="st">'+(D.bk.length?'[✓]':'[ ]')+'</span> <b>booking</b> <small>'+D.bk.length+'/'+MAXB+' ไฟล์ (ไม่บังคับ)</small></li>';
   h+=D.bk.map((b,i)=>'<li class="done sub"><span class="st">└─</span> <b>'+esc(b.code)+'</b> '+esc(b.who.replace(/^\d+\s*/,''))+' <small>· '+esc(b.name)+' · '+fmt(b.rows.length)+' แถว</small> <button class="x" data-b="'+i+'" title="เอาออก" type="button">✕</button></li>').join('');
   $('#list').innerHTML=h;
-  $('#go').disabled=!(D.cn&&D.zc);
-  $('#gohint').textContent=!(D.cn&&D.zc)?'ต้องมีไฟล์ cn43n และ zcn52n ก่อน':(D.bk.length?'':'ยังไม่มีไฟล์ booking — ทำได้ แต่ช่อง เลขที่ใบจองพัสดุ/ผู้รับเหมา จะว่าง');
+  renderMap();
+  const miss=['cn','zc'].some(k=>D[k]&&missingCols(k,D[k].head).length);
+  $('#go').disabled=!(D.cn&&D.zc)||miss;
+  $('#gohint').textContent=!(D.cn&&D.zc)?'ต้องมีไฟล์ cn43n และ zcn52n ก่อน':miss?'จับคู่คอลัมน์ให้ครบก่อน':(D.bk.length?'':'ยังไม่มีไฟล์ booking — ทำได้ แต่ช่อง เลขที่ใบจองพัสดุ/ผู้รับเหมา จะว่าง');
   document.querySelectorAll('button.x').forEach(b=>b.onclick=()=>{if(b.dataset.k)D[b.dataset.k]=null;else D.bk.splice(+b.dataset.b,1);render()});
 }
-const parse=async f=>parseFile(await f.arrayBuffer());
+const parse=async f=>parseFile(await f.arrayBuffer(),f.name);
+const MAPKEY='cn43n-zcn52n-colmap',KLABEL={cn:'cn43n',zc:'zcn52n'};
+function saveMap(){try{localStorage.setItem(MAPKEY,JSON.stringify(USERMAP))}catch(e){}}
+function renderMap(){
+  const box=$('#map');let h='';
+  for(const k of['cn','zc']){const f=D[k];if(!f)continue;const miss=missingCols(k,f.head);if(!miss.length)continue;
+    const opts='<option value="">— เลือกคอลัมน์ในไฟล์ —</option>'+f.raw.map((r,i)=>{const s=f.rows.find(x=>x[i]!==''&&x[i]!=null);
+      return '<option value="'+i+'">'+esc(L(i)+': '+(r||'(ไม่มีหัว)'))+(s?' — เช่น '+esc(String(s[i] instanceof Date?s[i].toISOString().slice(0,10):s[i]).slice(0,24)):'')+'</option>'}).join('');
+    h+='<div class="mapbox"><b>ไฟล์ '+KLABEL[k]+' ('+esc(f.name)+'): หาคอลัมน์ไม่เจอ '+miss.length+' ช่อง</b><div class="note">เลือกว่าคอลัมน์ไหนในไฟล์คือช่องที่ต้องใช้ ระบบจะจำไว้ในเครื่องนี้ รอบหน้าไฟล์แบบเดียวกันเข้าได้เลย</div>'+
+      miss.map(n=>'<label>'+esc(n)+'</label><select data-k="'+k+'" data-n="'+esc(n)+'">'+opts+'</select>').join('')+
+      '<div class="go" style="margin-top:10px"><button type="button" class="mapsave" data-k="'+k+'">บันทึกการจับคู่</button></div></div>'}
+  if(Object.keys(USERMAP).length)h+='<div class="note">มีการจับคู่คอลัมน์ที่จำไว้ '+Object.keys(USERMAP).length+' รายการ <button type="button" class="sec" id="mapclear" style="padding:2px 10px">ล้างที่จำไว้</button></div>';
+  box.innerHTML=h;
+  box.querySelectorAll('button.mapsave').forEach(b=>b.onclick=()=>{const k=b.dataset.k,f=D[k],sel=[...box.querySelectorAll('select[data-k="'+k+'"]')];
+    if(sel.some(s=>s.value===''))return stepMsg('#nup','เลือกให้ครบทุกช่องก่อนบันทึก',1);
+    const used=sel.map(s=>s.value);if(new Set(used).size!==used.length)return stepMsg('#nup','เลือกคอลัมน์ซ้ำกัน',1);
+    for(const s of sel)USERMAP[nkey(f.raw[+s.value])]=s.dataset.n;saveMap();
+    for(const kk of['cn','zc'])if(D[kk])applyMap(D[kk]);
+    stepMsg('#nup','บันทึกการจับคู่คอลัมน์ของไฟล์ '+KLABEL[k]+' แล้ว');render()});
+  const cl=$('#mapclear');if(cl)cl.onclick=()=>{USERMAP={};saveMap();for(const kk of['cn','zc'])if(D[kk])applyMap(D[kk]);stepMsg('#nup','ล้างการจับคู่คอลัมน์ที่จำไว้แล้ว');render()};
+}
 async function loadAll(files){
   const out=[];let bad=false;
   for(const f of files){
     stepMsg('#nup','กำลังอ่าน '+f.name+' …');
     try{const p=await parse(f);
-      if(!p){out.push('✗ "'+f.name+'" ไม่ใช่ไฟล์ cn43n, zcn52n หรือรายงานใบจองพัสดุ');bad=true;continue}
+      if(!p){out.push('✗ "'+f.name+'" ไม่รู้จักไฟล์นี้ — ตั้งชื่อไฟล์ให้มีคำว่า cn43n หรือ zcn52n หรือใช้รายงานใบจองพัสดุ (WRQSR02)');bad=true;continue}
       if(p.kind==='cn'||p.kind==='zc'){
         if(D[p.kind])out.push('แทนที่ไฟล์ '+(p.kind==='cn'?'cn43n':'zcn52n')+' เดิมด้วย "'+f.name+'"');
         D[p.kind]={name:f.name,...p};continue}
@@ -344,7 +386,7 @@ async function run(){
     a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
     a.download='zcn52n_result_'+ymd+'.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
     const s=res.stats,bk=s.bk,w=[];
-    if(!s.cnKept)w.push('ไม่มีแถวใน cn43n ที่ตรงเงื่อนไข ตรวจรหัสสถานะ/หมายเลขผู้สมัครอีกครั้ง');
+    if(!s.cnKept)w.push('ไม่มีแถวใน cn43n ที่ตรงเงื่อนไข ตรวจรหัสสถานะ/หมายเลขผู้สมัครในหน้า "ตั้งค่า"'+(s.sugg.length?' — หมายเลขผู้สมัครที่มีสถานะ '+esc(S.statuses.join('/'))+' ในไฟล์นี้: '+s.sugg.map(([a,e])=>'<b>'+esc(a)+'</b> '+esc(e.who)+' ('+fmt(e.n)+')').join(', '):''));
     if(s.missRows)w.push(fmt(s.missRows)+' แถวใน zcn52n ไม่พบ WBS ใน cn43n ที่กรองแล้ว ('+s.missN+' WBS เช่น '+s.miss.map(esc).join(', ')+')'+(S.drop?' — ตัดออกแล้ว':' — คงไว้โดยเว้นช่อง lookup ว่าง'));
     for(const t in s.other)w.push(fmt(s.other[t])+' แถวมีประเภทการเคลื่อนย้าย "'+esc(t)+'" ซึ่งไม่ได้ตั้งไว้ จึงไม่ถูกนำมาใส่');
     if(s.noAtt.length)w.push('ไม่มีไฟล์ booking ของรหัส '+s.noAtt.map(esc).join(', ')+' — เลขที่ใบจองพัสดุของรหัสนี้จะว่าง');
