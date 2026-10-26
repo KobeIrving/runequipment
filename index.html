@@ -43,6 +43,20 @@ td,th{text-align:left;padding:6px 10px;border-bottom:1px solid var(--d)}th{color
 .tabs{font-size:.9rem;color:var(--m);margin-top:8px}
 .mapbox{background:var(--c);border:1px solid var(--w);border-radius:8px;padding:12px 16px;margin:14px 0}.mapbox>b{color:var(--w)}
 select{width:100%;padding:7px 9px;border:1px solid var(--d);border-radius:5px;background:#000;color:var(--t);font:inherit}
+#view{margin-top:22px;border-top:1px dashed var(--d);padding-top:16px}
+.vhead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.vhead h2{color:var(--hi);margin:0}
+#vtabs{display:flex;gap:6px;overflow-x:auto;padding:10px 0 8px;scrollbar-width:thin}
+.vt{flex:none;background:var(--c);color:var(--m);border:1px solid var(--d);font-weight:400;padding:6px 12px;border-radius:6px 6px 0 0;text-shadow:none}
+.vt small{color:inherit;opacity:.75}.vt:hover:not(.on){background:#0b1f0f;color:var(--t);border-color:var(--m)}
+.vt.on{background:var(--t);color:#000;border-color:var(--t);font-weight:700}.vt.empty:not(.on){opacity:.5}
+.vtools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:4px 0 8px}.vtools input{flex:1 1 260px;width:auto}
+#vtable{max-height:62vh;overflow:auto;border:1px solid var(--d);border-radius:6px;background:var(--c)}
+.vtbl{border-collapse:collapse;margin:0;font-size:.86rem;white-space:nowrap;width:max-content;min-width:100%;background:none}
+.vtbl th{position:sticky;top:0;background:#0b1f0f;color:var(--hi);cursor:pointer;z-index:1;border-bottom:1px solid var(--m);padding:6px 10px;text-align:left}
+.vtbl td{padding:4px 10px;border-bottom:1px solid #0a2a12;color:var(--t)}.vtbl td:last-child{color:var(--t)}
+.vtbl .n{text-align:right;font-variant-numeric:tabular-nums}.vtbl .rn{color:var(--d);text-align:right;position:sticky;left:0;background:var(--c)}
+.vtbl tr.b td{font-weight:700;color:var(--hi);background:#0b1f0f}.vtbl tbody tr:hover td{background:#0e2a15}
+.vpager{display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:8px}.vpager button{padding:5px 12px}
 ::selection{background:var(--t);color:#000}
 @media(max-width:520px){.g{grid-template-columns:62px 1fr 1fr}.g3{grid-template-columns:1fr}}
 </style></head><body><main>
@@ -74,9 +88,16 @@ select{width:100%;padding:7px 9px;border:1px solid var(--d);border-radius:5px;ba
   <div class="go" style="margin-top:10px"><button class="sec" id="rs" type="button">คืนค่าเริ่มต้น</button></div>
 </details>
 
-<div class="go"><button id="go" type="button" disabled>ประมวลผลและดาวน์โหลด .xlsx</button><span class="mut" id="gohint"></span></div>
+<div class="go"><button id="go" type="button" disabled>ประมวลผล</button><span class="mut" id="gohint"></span></div>
 <div class="tabs">แท็บในไฟล์ผลลัพธ์: Main 281 · main คลัง · main คลัง งบ C / I / P · Main 581 · WBS · WBS booking (+ แยกตามรหัส) · วัสดุ · วัสดุ booking (+ แยกตามรหัส) · WBS รื้อถอน · cn43n (กรอง) · แท็บ booking ตามรหัส</div>
 <div id="msg"></div><div id="sum"></div>
+<section id="view" hidden>
+  <div class="vhead"><h2>ดูผลลัพธ์</h2><button id="dl" type="button">ดาวน์โหลด .xlsx</button></div>
+  <div id="vtabs" role="tablist"></div>
+  <div class="vtools"><input type="text" id="vq" placeholder="ค้นหาในแท็บนี้ เช่น WBS, รหัสวัสดุ, ชื่อผู้รับเหมา"><span id="vinfo" class="mut"></span></div>
+  <div id="vtable"></div>
+  <div class="vpager"><button type="button" class="sec" id="vprev">‹ ก่อนหน้า</button><span id="vpg" class="mut"></span><button type="button" class="sec" id="vnext">ถัดไป ›</button></div>
+</section>
 </main>
 <script>/*! ExcelJS 19-10-2023 */
 
@@ -316,6 +337,7 @@ const read=()=>({statuses:$('#st').value,applicants:$('#ap').value,drop:$('#dr')
 function msg(t,bad){const e=$('#msg');e.className=bad?'err':'';e.textContent=t}
 function stepMsg(id,t,bad){const e=$(id);e.className='note'+(bad?' err':'');e.textContent=t}
 function render(){
+  if(LAST&&(LAST.cn!==D.cn||LAST.zc!==D.zc||LAST.bkn!==D.bk.length)){LAST=null;$('#view').hidden=true}
   const row=(k,label)=>{const f=D[k];return'<li class="'+(f?'done':'')+'"><span class="st">'+(f?'[✓]':'[ ]')+'</span> <b>'+label+'</b> '+
     (f?esc(f.name)+' <small>('+fmt(f.rows.length)+' แถว)</small> <button class="x" data-k="'+k+'" title="เอาออก" type="button">✕</button>':'<small>รอไฟล์</small>')+'</li>'};
   let h=row('cn','cn43n')+row('zc','zcn52n');
@@ -371,6 +393,56 @@ async function loadAll(files){
 function syncApplicants(){
   const cur=parseList($('#ap').value),add=D.bk.map(b=>b.code).filter(c=>!cur.includes(c));
   if(add.length){$('#ap').value=[...cur,...add].join(', ');$('#aphint').textContent='เพิ่มรหัส '+add.join(', ')+' จากไฟล์ booking ให้อัตโนมัติ'}}
+let LAST=null;
+async function download(){
+  if(!LAST)return;const b=$('#dl');b.disabled=true;b.textContent='กำลังสร้างไฟล์…';
+  try{const buf=await makeWorkbook(LAST.res,LAST.S).xlsx.writeBuffer(),a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    a.download=LAST.fname;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+    msg('ดาวน์โหลดไฟล์ '+LAST.fname+' แล้ว')}catch(e){msg('สร้างไฟล์ไม่ได้: '+e.message,1)}
+  b.disabled=false;b.textContent='ดาวน์โหลด .xlsx'}
+/* ---------- viewer ---------- */
+const PAGE=100,V={tabs:[],cur:0,q:'',page:0,sort:null};
+function viewTabs(res,S){
+  const T=[],sb=r=>r;const hs=res.heads[0];
+  T.push({name:S.groups[0].main,head:hs,rows:res.mains[0],sum:hs.length-1});
+  T.push({name:S.extra.store,head:[...hs,'งบ'],rows:res.store,sum:hs.length-1});
+  for(const b of BUD)T.push({name:budName(S,b),head:[...hs,'งบ'],rows:res.bud[b],sum:hs.length-1});
+  T.push({name:S.groups[1].main,head:res.heads[1],rows:res.mains[1],sum:res.heads[1].length-1});
+  for(const p of res.pivots){const bold=new Set();p.out.forEach((o,i)=>{if(o.bold)bold.add(i)});
+    T.push({name:p.name,head:[...p.names,'Sum of คงเหลือ'],rows:p.out.map(o=>o.cells),bold,pivot:1})}
+  T.push({name:'cn43n (กรอง)',head:res.cnHead,rows:res.cnF});
+  for(const a of res.attList)T.push({name:a.code,head:a.w.head,rows:a.w.rows});
+  return T}
+const cellTxt=v=>v instanceof Date?String(v.getDate()).padStart(2,'0')+'/'+String(v.getMonth()+1).padStart(2,'0')+'/'+v.getFullYear():typeof v==='number'?v.toLocaleString('en-US',{maximumFractionDigits:2}):String(v??'');
+function showViewer(res,S){
+  V.tabs=viewTabs(res,S);V.cur=0;V.q='';V.page=0;V.sort=null;$('#vq').value='';$('#vtable').scrollLeft=0;
+  $('#view').hidden=false;drawTabs();drawTable();$('#view').scrollIntoView({behavior:'smooth',block:'start'})}
+function drawTabs(){
+  $('#vtabs').innerHTML=V.tabs.map((t,i)=>'<button type="button" class="vt'+(i===V.cur?' on':'')+(t.rows.length?'':' empty')+'" data-i="'+i+'">'+esc(t.name)+' <small>'+fmt(t.rows.length)+'</small></button>').join('');
+  $('#vtabs').querySelectorAll('.vt').forEach(b=>b.onclick=()=>{V.cur=+b.dataset.i;V.page=0;V.sort=null;drawTabs();drawTable();$('#vtable').scrollLeft=0});
+  const on=$('#vtabs .vt.on');if(on)on.scrollIntoView({block:'nearest',inline:'nearest'})}
+function viewRows(){
+  const t=V.tabs[V.cur],q=V.q.trim().toLowerCase();
+  let idx=t.rows.map((_,i)=>i);
+  if(q)idx=idx.filter(i=>t.rows[i].some(v=>cellTxt(v).toLowerCase().includes(q)||String(v??'').toLowerCase().includes(q)));
+  if(V.sort&&!t.pivot){const{c,d}=V.sort,col=new Intl.Collator('th',{numeric:true});
+    idx.sort((a,b)=>{const x=t.rows[a][c],y=t.rows[b][c];const r=(typeof x==='number'&&typeof y==='number')?x-y:(x instanceof Date&&y instanceof Date)?x-y:col.compare(String(x??''),String(y??''));return d*r})}
+  return idx}
+function drawTable(){
+  const t=V.tabs[V.cur];if(!t)return;const idx=viewRows(),pages=Math.max(1,Math.ceil(idx.length/PAGE));
+  if(V.page>=pages)V.page=pages-1;const from=V.page*PAGE,slice=idx.slice(from,from+PAGE);
+  const num=t.head.map((_,c)=>t.rows.slice(0,200).some(r=>typeof r[c]==='number'));
+  let h='<table class="vtbl"><thead><tr><th class="rn">#</th>'+t.head.map((x,c)=>'<th data-c="'+c+'"'+(num[c]?' class="n"':'')+'>'+esc(x||'(ไม่มีหัว)')+(V.sort&&V.sort.c===c?(V.sort.d>0?' ▲':' ▼'):'')+'</th>').join('')+'</tr></thead><tbody>';
+  h+=slice.map(i=>{const r=t.rows[i];return'<tr'+(t.bold&&t.bold.has(i)?' class="b"':'')+'><td class="rn">'+(i+1)+'</td>'+t.head.map((_,c)=>'<td'+(num[c]?' class="n"':'')+'>'+esc(cellTxt(r[c]))+'</td>').join('')+'</tr>'}).join('');
+  if(!slice.length)h+='<tr><td class="rn"></td><td colspan="'+t.head.length+'" class="mut">'+(t.rows.length?'ไม่พบข้อมูลที่ค้นหา':'แท็บนี้ไม่มีข้อมูล')+'</td></tr>';
+  h+='</tbody></table>';
+  $('#vtable').innerHTML=h;$('#vtable').scrollTop=0;
+  let tot='';if(t.sum!=null&&idx.length){const s=idx.reduce((a,i)=>a+(typeof t.rows[i][t.sum]==='number'?t.rows[i][t.sum]:0),0);tot=' · คงเหลือรวม '+fmt(Math.round(s*1e6)/1e6)}
+  $('#vinfo').textContent=(idx.length===t.rows.length?fmt(t.rows.length)+' แถว':'พบ '+fmt(idx.length)+' จาก '+fmt(t.rows.length)+' แถว')+tot+(t.pivot?' · ตารางสรุป (เรียงตาม pivot)':'');
+  $('#vpg').textContent='หน้า '+(V.page+1)+'/'+pages;$('#vprev').disabled=V.page<=0;$('#vnext').disabled=V.page>=pages-1;
+  if(!t.pivot)$('#vtable').querySelectorAll('th[data-c]').forEach(th=>th.onclick=()=>{const c=+th.dataset.c;V.sort=V.sort&&V.sort.c===c?(V.sort.d>0?{c,d:-1}:null):{c,d:1};V.page=0;drawTable()});
+}
 async function run(){
   const raw=read(),S={...raw,statuses:parseList(raw.statuses),applicants:parseList(raw.applicants)};
   if(!S.statuses.length||!S.applicants.length)return msg('กรอกรหัสสถานะและหมายเลขผู้สมัครอย่างน้อย 1 ค่า',1);
@@ -380,11 +452,9 @@ async function run(){
   $('#go').disabled=true;msg('กำลังประมวลผล…');$('#sum').innerHTML='';
   await new Promise(r=>setTimeout(r,30));
   try{
-    const res=build(D.cn,D.zc,wr,S),wb=makeWorkbook(res,S),buf=await wb.xlsx.writeBuffer(),
-      d=new Date(),ymd=d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'),
-      a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
-    a.download='zcn52n_result_'+ymd+'.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+    const res=build(D.cn,D.zc,wr,S),d=new Date(),
+      fname='zcn52n_result_'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'.xlsx';
+    LAST={res,S,fname,cn:D.cn,zc:D.zc,bkn:D.bk.length};
     const s=res.stats,bk=s.bk,w=[];
     if(!s.cnKept)w.push('ไม่มีแถวใน cn43n ที่ตรงเงื่อนไข ตรวจรหัสสถานะ/หมายเลขผู้สมัครในหน้า "ตั้งค่า"'+(s.sugg.length?' — หมายเลขผู้สมัครที่มีสถานะ '+esc(S.statuses.join('/'))+' ในไฟล์นี้: '+s.sugg.map(([a,e])=>'<b>'+esc(a)+'</b> '+esc(e.who)+' ('+fmt(e.n)+')').join(', '):''));
     if(s.missRows)w.push(fmt(s.missRows)+' แถวใน zcn52n ไม่พบ WBS ใน cn43n ที่กรองแล้ว ('+s.missN+' WBS เช่น '+s.miss.map(esc).join(', ')+')'+(S.drop?' — ตัดออกแล้ว':' — คงไว้โดยเว้นช่อง lookup ว่าง'));
@@ -404,7 +474,8 @@ async function run(){
       (bk.blankNote?'<p class="info">ℹ '+fmt(bk.blankNote)+' แถวพบใบจอง แต่ หมายเหตุ ในไฟล์ booking ว่าง → ผู้รับเหมาว่าง</p>':'')+
       (bk.multi?'<p class="info">ℹ '+fmt(bk.multi)+' แถวมีใบจองให้เลือกมากกว่า 1 ใบ ใช้ใบแรกที่พบ</p>':'')+
       w.map(x=>'<p class="warn">⚠ '+x+'</p>').join('');
-    msg('เสร็จแล้ว — ดาวน์โหลดไฟล์ '+a.download);
+    msg('ประมวลผลเสร็จแล้ว — ดูผลในแท็บด้านล่าง หรือกดดาวน์โหลด .xlsx');
+    showViewer(res,S);
   }catch(e){msg('ผิดพลาด: '+e.message,1);console.error(e)}
   render()}
 function _unusedWireDrop(el,fn){
@@ -420,7 +491,9 @@ function _unusedWireDrop(el,fn){
   ['dragover','dragenter'].forEach(v=>dz.addEventListener(v,e=>{e.preventDefault();dz.classList.add('on')}));
   ['dragleave','drop'].forEach(v=>dz.addEventListener(v,e=>{e.preventDefault();dz.classList.remove('on')}));
   dz.addEventListener('drop',e=>loadAll([...e.dataTransfer.files]));
-  $('#go').onclick=run;
+  $('#go').onclick=run;$('#dl').onclick=download;
+  let qt;$('#vq').oninput=e=>{clearTimeout(qt);qt=setTimeout(()=>{V.q=e.target.value;V.page=0;drawTable()},200)};
+  $('#vprev').onclick=()=>{V.page--;drawTable()};$('#vnext').onclick=()=>{V.page++;drawTable()};
   $('#rs').onclick=()=>{fill(DEF);try{localStorage.removeItem(LS)}catch(e){};$('#aphint').textContent=''};
 })();
 </script>
