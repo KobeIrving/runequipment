@@ -102,7 +102,7 @@ body.v{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hi
 </details>
 
 <div class="go"><button id="go" type="button" disabled>ประมวลผล</button><span class="mut" id="gohint"></span></div>
-<div class="tabs">แท็บในไฟล์ผลลัพธ์: Main 281 · main คลัง · main คลัง งบ C / I / P · Main 581 · WBS · WBS booking (+ แยกตามรหัส) · วัสดุ · วัสดุ booking (+ แยกตามรหัส) · WBS รื้อถอน · cn43n (กรอง) · แท็บ booking ตามรหัส</div>
+<div class="tabs">แท็บในไฟล์ผลลัพธ์: Main 281 · main คลัง · main คลัง งบ C / I / P · Main 581 · WBS · WBS booking (+ แยกตามรหัส) · วัสดุ · วัสดุ booking (+ แยกตามรหัส) · WBS รื้อถอน · cn43n (กรอง) · แท็บ booking ตามรหัส · list น้ำหนัก</div>
 <div id="msg"></div><div id="sum"></div>
 </main>
 <div id="pgView" hidden>
@@ -237,9 +237,10 @@ async function parseFile(buf,name){
   const w=g?null:wrqFromGrid(gridFromWs(ws));return w?{kind:'wr',...w}:null;
 }
 const need=(h,n,l)=>{const i=h.indexOf(n);if(i<0)throw new Error(l+' ไม่พบคอลัมน์ "'+n+'"');return i};
+const WNAME='list น้ำหนัก',WHEAD=['รหัสพัสดุ','รายการ','น้ำหนัก'],WLIST=[["1-01-011-0201","BOLT,MACHINE M.16X170 MM.",0.32999999999999996],["1-01-011-0202","BOLT,MACHINE M.16X200 MM.",0.36],["1-01-011-0203","BOLT,MACHINE M.16X250 MM.",0.44999999999999996],["1-01-018-0100","WASHER,PLAIN,SQUARE, 52X52X4.5 MM.",0.07],["1-02-007-0002","CABLE,AL,750 V,50 SQ.MM. TIS.293",null],["1-02-031-0001","CONNECTOR,D/E,AL 50-70 SQ.MM.",0.1],["1-02-032-0005","H-CONNECTTOR,MAIN AL. 35-50,TAP CU 6-10",0],["1-03-003-0000","INSULATOR,SPOOL,CLASS 53-2 TIS.227",0],["1-03-013-0000","RACK, 2X200 MM. EXT.BACK",2],["1-03-013-0002","RACK, 4X200 MM. EXT.BACK",4],["1-03-013-0100","CLEVIS,FLAT STEEL 4 1/4,INSULATOR,53-2",0.83],["1-01-010-0004","ST. WIRE, STRANDED 50/7 SQ.MM.TIS.404",0.39999999999999997],["1-01-011-0200","BOLT,MACHINE M.16X130 MM.",0.28],["1-01-011-0203","BOLT,MACHINE M.16X250 MM.",0.45],["1-01-011-0204","BOLT,MACHINE M.16X300 MM.",0.54],["1-01-011-0205","BOLT,MACHINE M.16X350 MM.",0.6],["1-01-018-0100","WASHER,PLAIN,SQUARE, 52X52X4.5 MM.",0.07],["1-01-018-0301","WASHER,LOCK,SPRING,SIZE 16 MM.,TIS.259",0.015],["1-01-020-0001","BRACE,FLAT,FOR CROSSARM 30X6X760 MM.",1.05],["1-01-023-0000","CLAMP,SINGLE U-BOLT,M.8 (WIRE ROPE CLIP)",0.07],["1-02-005-0000","CABLE,AERIAL,AL 22 KV. 1X50 SQ.MM.",0.042],["1-02-030-0102","CONN.,PG,DOUBLE BOLT,AL 25-95 SQ.MM.",0.12],["1-02-033-0005","HOTLINE BAIL-CLAMP,MAIN 35-70 SQ.MM.",0],["1-02-033-0104","HOTLINE CLAMP,MAIN35-185,TAP50-185SQ.MM.",0],["1-02-042-0400","PIN TERMINAL,FOR AL.CONDUCTOR 50 SQ.MM.",0.06],["1-04-000-0000","S.A., 21 KV. 5 KA.",3.9600000000000004],["1-04-000-0007","S.A., 21 KV.5 KA.,WITHOUT BRACKET",2.4],["1-04-001-0002","DROPOUT,FUSE,22 KV.100 A.12 KA",0],["1-04-002-0100","L.T. FUSE-SWITCHES 1X400 A. 500 V.",3.9499999999999997],["1-04-003-0003","FUSE LINK 22 KV. 5-6 A.EEI-NEMA TYPE K",0.02],["1-02-026-0301","PREFORMED D/E, AW 50 SQ.MM.",null],["1-03-013-0001","RACK, 3X200 MM. EXT.BACK",3],["1-04-000-0300","S.A. 250-500 V. 2.5-5.0 KA",0.29],["1-01-012-0001","BOLT,DOUBLE ARMING,M.16X450 MM.",0.72],["1-02-031-0002","CONNECTOR,D/E,AL 95-120 SQ.MM.",0.2]];
 const BUD=['C','I','P'],budName=(S,b)=>S.extra.store+' งบ '+b;
 function checkNames(S,codes){
-  const n=['cn43n (กรอง)',...BUD.map(b=>budName(S,b)),...S.applicants.flatMap(cd=>[S.extra.wbsBooking+' '+cd,S.extra.matBooking+' '+cd]),...S.groups.flatMap(g=>[g.main,g.pivot]),...Object.values(S.extra),...codes];
+  const n=['cn43n (กรอง)',WNAME,...BUD.map(b=>budName(S,b)),...S.applicants.flatMap(cd=>[S.extra.wbsBooking+' '+cd,S.extra.matBooking+' '+cd]),...S.groups.flatMap(g=>[g.main,g.pivot]),...Object.values(S.extra),...codes];
   for(const x of n)if(!x||x.length>31||/[\[\]:*?\/\\]/.test(x))return'ชื่อแท็บไม่ถูกต้อง: "'+x+'" (ห้ามว่าง ยาวเกิน 31 ตัว หรือมี [ ] : * ? / \\)';
   if(new Set(n.map(x=>x.toLowerCase())).size!==n.length)return'ชื่อแท็บซ้ำกัน';
   return'';
@@ -333,6 +334,8 @@ function makeWorkbook(res,S){
   sheet('cn43n (กรอง)',res.cnHead,res.cnF);
   A.forEach(a=>{const w=a.w;
     sheet(a.code,[...w.head,'คีย์ (ใบสั่ง|รหัสพัสดุ)'],w.rows,(r,n)=>[...r,{formula:`${L(w.iOrd)}${n}&"|"&${L(w.iMat)}${n}`,result:String(r[w.iOrd])+'|'+String(r[w.iMat])}])});
+  const wl=wb.addWorksheet(WNAME);WLIST.forEach(r=>wl.addRow(r.map(v=>v==null?null:v)));
+  wl.getColumn(1).width=15;wl.getColumn(2).width=46;wl.getColumn(3).width=10;
   return wb;
 }
 
@@ -428,6 +431,7 @@ function viewTabs(res,S){
     T.push({name:p.name,head:[...p.names,'Sum of คงเหลือ'],rows:p.out.map(o=>o.cells),bold,pivot:1})}
   T.push({name:'cn43n (กรอง)',head:res.cnHead,rows:res.cnF});
   for(const a of res.attList)T.push({name:a.code,head:a.w.head,rows:a.w.rows});
+  T.push({name:WNAME,head:WHEAD,rows:WLIST.map(r=>r.map(v=>v==null?'':v)),fx:v=>typeof v==='number'?String(R6(v)):String(v??'')});
   return T}
 const cellTxt=v=>v instanceof Date?String(v.getDate()).padStart(2,'0')+'/'+String(v.getMonth()+1).padStart(2,'0')+'/'+v.getFullYear():typeof v==='number'?v.toLocaleString('en-US',{maximumFractionDigits:2}):String(v??'');
 function showViewer(res,S){
@@ -451,7 +455,7 @@ function drawTable(){
   if(V.page>=pages)V.page=pages-1;const from=V.page*PAGE,slice=idx.slice(from,from+PAGE);
   const num=t.head.map((_,c)=>t.rows.slice(0,200).some(r=>typeof r[c]==='number'));
   let h='<table class="vtbl"><thead><tr><th class="rn">#</th>'+t.head.map((x,c)=>'<th data-c="'+c+'"'+(num[c]?' class="n"':'')+'>'+esc(x||'(ไม่มีหัว)')+(V.sort&&V.sort.c===c?(V.sort.d>0?' ▲':' ▼'):'')+'</th>').join('')+'</tr></thead><tbody>';
-  h+=slice.map(i=>{const r=t.rows[i];return'<tr'+(t.bold&&t.bold.has(i)?' class="b"':'')+'><td class="rn">'+(i+1)+'</td>'+t.head.map((_,c)=>'<td'+(num[c]?' class="n"':'')+'>'+esc(cellTxt(r[c]))+'</td>').join('')+'</tr>'}).join('');
+  h+=slice.map(i=>{const r=t.rows[i];return'<tr'+(t.bold&&t.bold.has(i)?' class="b"':'')+'><td class="rn">'+(i+1)+'</td>'+t.head.map((_,c)=>'<td'+(num[c]?' class="n"':'')+'>'+esc((t.fx||cellTxt)(r[c]))+'</td>').join('')+'</tr>'}).join('');
   if(!slice.length)h+='<tr><td class="rn"></td><td colspan="'+t.head.length+'" class="mut">'+(t.rows.length?'ไม่พบข้อมูลที่ค้นหา':'แท็บนี้ไม่มีข้อมูล')+'</td></tr>';
   h+='</tbody></table>';
   $('#vtable').innerHTML=h;$('#vtable').scrollTop=0;
