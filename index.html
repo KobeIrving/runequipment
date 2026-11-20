@@ -242,15 +242,17 @@ async function parseFile(buf,name){
 }
 const need=(h,n,l)=>{const i=h.indexOf(n);if(i<0)throw new Error(l+' ไม่พบคอลัมน์ "'+n+'"');return i};
 const WNAME='list น้ำหนัก',WHEAD=['รหัสพัสดุ','รายการ','น้ำหนัก'],WLIST=[["1-01-011-0201","BOLT,MACHINE M.16X170 MM.",0.32999999999999996],["1-01-011-0202","BOLT,MACHINE M.16X200 MM.",0.36],["1-01-011-0203","BOLT,MACHINE M.16X250 MM.",0.44999999999999996],["1-01-018-0100","WASHER,PLAIN,SQUARE, 52X52X4.5 MM.",0.07],["1-02-007-0002","CABLE,AL,750 V,50 SQ.MM. TIS.293",null],["1-02-031-0001","CONNECTOR,D/E,AL 50-70 SQ.MM.",0.1],["1-02-032-0005","H-CONNECTTOR,MAIN AL. 35-50,TAP CU 6-10",0],["1-03-003-0000","INSULATOR,SPOOL,CLASS 53-2 TIS.227",0],["1-03-013-0000","RACK, 2X200 MM. EXT.BACK",2],["1-03-013-0002","RACK, 4X200 MM. EXT.BACK",4],["1-03-013-0100","CLEVIS,FLAT STEEL 4 1/4,INSULATOR,53-2",0.83],["1-01-010-0004","ST. WIRE, STRANDED 50/7 SQ.MM.TIS.404",0.39999999999999997],["1-01-011-0200","BOLT,MACHINE M.16X130 MM.",0.28],["1-01-011-0203","BOLT,MACHINE M.16X250 MM.",0.45],["1-01-011-0204","BOLT,MACHINE M.16X300 MM.",0.54],["1-01-011-0205","BOLT,MACHINE M.16X350 MM.",0.6],["1-01-018-0100","WASHER,PLAIN,SQUARE, 52X52X4.5 MM.",0.07],["1-01-018-0301","WASHER,LOCK,SPRING,SIZE 16 MM.,TIS.259",0.015],["1-01-020-0001","BRACE,FLAT,FOR CROSSARM 30X6X760 MM.",1.05],["1-01-023-0000","CLAMP,SINGLE U-BOLT,M.8 (WIRE ROPE CLIP)",0.07],["1-02-005-0000","CABLE,AERIAL,AL 22 KV. 1X50 SQ.MM.",0.042],["1-02-030-0102","CONN.,PG,DOUBLE BOLT,AL 25-95 SQ.MM.",0.12],["1-02-033-0005","HOTLINE BAIL-CLAMP,MAIN 35-70 SQ.MM.",0],["1-02-033-0104","HOTLINE CLAMP,MAIN35-185,TAP50-185SQ.MM.",0],["1-02-042-0400","PIN TERMINAL,FOR AL.CONDUCTOR 50 SQ.MM.",0.06],["1-04-000-0000","S.A., 21 KV. 5 KA.",3.9600000000000004],["1-04-000-0007","S.A., 21 KV.5 KA.,WITHOUT BRACKET",2.4],["1-04-001-0002","DROPOUT,FUSE,22 KV.100 A.12 KA",0],["1-04-002-0100","L.T. FUSE-SWITCHES 1X400 A. 500 V.",3.9499999999999997],["1-04-003-0003","FUSE LINK 22 KV. 5-6 A.EEI-NEMA TYPE K",0.02],["1-02-026-0301","PREFORMED D/E, AW 50 SQ.MM.",null],["1-03-013-0001","RACK, 3X200 MM. EXT.BACK",3],["1-04-000-0300","S.A. 250-500 V. 2.5-5.0 KA",0.29],["1-01-012-0001","BOLT,DOUBLE ARMING,M.16X450 MM.",0.72],["1-02-031-0002","CONNECTOR,D/E,AL 95-120 SQ.MM.",0.2]];
-const WCOLS=['น้ำหนัก/หน่วย','น้ำหนักรวม'],WMAP=new Map();for(const r of WLIST){const k=String(r[0]).trim();if(!WMAP.has(k))WMAP.set(k,r[2])}
-function addWeight(p){
+const RETMARK='ส่งคืนเบิกออก',WCOLS=['น้ำหนัก/หน่วย','น้ำหนักรวม',RETMARK],WMAP=new Map();for(const r of WLIST){const k=String(r[0]).trim();if(!WMAP.has(k))WMAP.set(k,r[2])}
+function addWeight(p,RK){
+  const ik=['องค์ประกอบ WBS','ใบสั่ง/โครงข่าย','วัสดุ'].map(n=>p.names.indexOf(n)),mk=k=>RK&&RK.has(ik.map(i=>String(k[i]).trim()).join('|'))?RETMARK:'';let nret=0;
   const im=p.names.indexOf('วัสดุ'),id=p.names.indexOf('คำอธิบายของวัสดุ'),N=p.names.length,nf=new Map(),zero=new Map();let tot=0;
-  for(const o of p.out){if(!o.k){o.cells.push('',R6(tot));o.wtot=1;continue}
+  for(const o of p.out){if(!o.k){o.cells.push('',R6(tot),'');o.wtot=1;continue}
+    const mark=mk(o.k);if(mark)nret++;
     const code=String(o.k[im]).trim(),q=o.cells[N];o.wcode=code;
-    if(!WMAP.has(code)){nf.set(code,o.k[id]);o.cells.push('','');continue}
+    if(!WMAP.has(code)){nf.set(code,o.k[id]);o.cells.push('','',mark);continue}
     const w=num(WMAP.get(code));if(!w)zero.set(code,o.k[id]);
-    const t=R6(q*w);tot=R6(tot+t);o.cells.push(w,t)}
-  p.weight={im,total:R6(tot),nf:[...nf],zero:[...zero]};return p}
+    const t=R6(q*w);tot=R6(tot+t);o.cells.push(w,t,mark)}
+  p.weight={im,nret,total:R6(tot),nf:[...nf],zero:[...zero]};return p}
 const BUD=['C','I','P'],budName=(S,b)=>S.extra.store+' งบ '+b;
 function checkNames(S,codes){
   const n=['cn43n (กรอง)',WNAME,...BUD.map(b=>budName(S,b)),...S.applicants.flatMap(cd=>[S.extra.wbsBooking+' '+cd,S.extra.matBooking+' '+cd,S.groups[1].pivot+' '+cd]),...S.groups.flatMap(g=>[g.main,g.pivot]),...Object.values(S.extra),...codes];
@@ -316,7 +318,7 @@ function build(cn,zc,wr,S){
     [E.mat,mains[0],M7,SM],[E.matBooking,mains[0],[...M7,...B2],SM],...codes.map(cd=>[E.matBooking+' '+cd,byCode(cd),[...M7,...B2],SM]),[S.groups[1].pivot,mains[1],R7,null,1],...codes1.map(cd=>[S.groups[1].pivot+' '+cd,byCode1(cd),R7,null,1]),[E.matRemove,mains[1],M7,SM]];
   const iBk=heads[0].indexOf('เลขที่ใบจองพัสดุ'),store=mains[0].filter(r=>String(r[iBk]).trim()!=='').map(r=>[...r,String(r[0]).trim().charAt(0)]);
   const bud={};for(const b of BUD)bud[b]=store.filter(r=>r[r.length-1]===b);const budOther={};for(const r of store){const b=r[r.length-1];if(!BUD.includes(b))budOther[b||'(ว่าง)']=(budOther[b||'(ว่าง)']||0)+1}
-  const pivots=defs.map(([name,rows,names,sub,g1])=>({name,...pivot(heads[rows===mains[1]||g1?1:0],rows,names,sub)}));defs.forEach((d,i)=>{if(d[4])addWeight(pivots[i])});
+  const pivots=defs.map(([name,rows,names,sub,g1])=>({name,...pivot(heads[rows===mains[1]||g1?1:0],rows,names,sub)}));const RK=new Set(ret.map(r=>[zW,zO,zM].map(i=>String(r[i]).trim()).join('|')));defs.forEach((d,i)=>{if(d[4])addWeight(pivots[i],RK)});
   const attList=Object.keys(att).map(code=>{const w=att[code].w;return{code,w,last:w.rows.length+1,kc:w.head.length}});
   return{zcHead:zc.head,ret,cnHead:cn.head,cnF,heads,mains,store,bud,pivots,attList,iH,iL,iQ,
     stats:{ret:ret.length,sugg:Object.entries(sugg).sort((a,b)=>b[1].n-a[1].n).slice(0,10),store:store.length,storeSum:R6(store.reduce((s,o)=>s+o[o.length-2],0)),bud:BUD.map(b=>({b,rows:bud[b].length,sum:R6(bud[b].reduce((s,o)=>s+o[o.length-2],0))})),budOther,cnTotal:cn.rows.length,cnKept:cnF.length,zcTotal:zc.rows.length,missRows,miss:[...miss].slice(0,5),missN:miss.size,positive,other,bk,
@@ -346,9 +348,9 @@ function makeWorkbook(res,S){
   sheet(S.groups[0].main,hs,res.mains[0],f0);const hsb=[...hs,'งบ'],fb=(r,n)=>[...f0(r.slice(0,-1),n),{formula:`LEFT(A${n},1)`,result:r[r.length-1]}];sheet(S.extra.store,hsb,res.store,fb);BUD.forEach(b=>sheet(budName(S,b),hsb,res.bud[b],fb));sheet(S.groups[1].main,hb,res.mains[1],f1);sheet(S.extra.ret,res.zcHead,res.ret);
   res.pivots.forEach(p=>{const W=p.weight,N=p.names.length,cQ=L(N),cW=L(N+1),cT=L(N+2),last=p.out.length+1;
     const fw=(c,n)=>{const o=p.out[n-2];if(!W)return c;const a=c.slice(0,N+1);
-      if(o.wtot)return[...a,'',{formula:`SUM(${cT}2:${cT}${last-1})`,result:c[N+2]}];
+      if(o.wtot)return[...a,'',{formula:`SUM(${cT}2:${cT}${last-1})`,result:c[N+2]},''];
       const ref=c[W.im]===''?JSON.stringify(o.wcode):`${L(W.im)}${n}`;
-      return[...a,{formula:`IFERROR(VLOOKUP(${ref},'${WNAME}'!$A:$C,3,FALSE),"")`,result:c[N+1]},{formula:`IF(${cW}${n}="","",${cQ}${n}*${cW}${n})`,result:c[N+2]}]};
+      return[...a,{formula:`IFERROR(VLOOKUP(${ref},'${WNAME}'!$A:$C,3,FALSE),"")`,result:c[N+1]},{formula:`IF(${cW}${n}="","",${cQ}${n}*${cW}${n})`,result:c[N+2]},c[N+3]]};
     const ws=sheet(p.name,[...p.names,'Sum of คงเหลือ',...(W?WCOLS:[])],p.out.map(o=>o.cells),W?fw:null);ws.autoFilter=undefined;
     if(W)[N+2,N+3].forEach(j=>ws.getColumn(j).eachCell((c,n)=>{if(n>1)c.numFmt='#,##0.000'}));
     p.out.forEach((o,i)=>{if(o.bold)ws.getRow(i+2).font={bold:true}})});
@@ -514,7 +516,7 @@ async function run(){
       '<tr><td>'+esc(S.extra.store)+' (มีเลขที่ใบจอง)</td><td>'+fmt(s.store)+' แถว · คงเหลือรวม '+fmt(s.storeSum)+'</td></tr>'+
       s.bud.map(x=>'<tr><td>'+esc(S.extra.store)+' งบ '+x.b+'</td><td>'+fmt(x.rows)+' แถว · คงเหลือรวม '+fmt(x.sum)+'</td></tr>').join('')+
       (()=>{const p=res.pivots.find(x=>x.weight),W=p.weight,ls=a=>a.slice(0,8).map(([c,d])=>'<b>'+esc(c)+'</b> '+esc(d)).join(', ')+(a.length>8?' …':'');
-        return'<tr><td>'+esc(p.name)+' น้ำหนักรวม (คงเหลือ × น้ำหนัก/หน่วย)</td><td>'+W.total.toLocaleString('en-US',{maximumFractionDigits:3})+'</td></tr></table>'+
+        return'<tr><td>'+esc(p.name)+' น้ำหนักรวม (คงเหลือ × น้ำหนัก/หน่วย)</td><td>'+W.total.toLocaleString('en-US',{maximumFractionDigits:3})+'</td></tr><tr><td>'+esc(p.name)+' แถวที่ตรงกับแท็บ '+esc(S.extra.ret)+'</td><td>'+fmt(W.nret)+' แถว</td></tr></table>'+
         (W.nf.length?'<p class="warn">⚠ '+esc(p.name)+': '+W.nf.length+' รหัสพัสดุไม่อยู่ใน '+WNAME+' จึงไม่ถูกนับน้ำหนัก — '+ls(W.nf)+'</p>':'')+
         (W.zero.length?'<p class="warn">⚠ '+esc(p.name)+': '+W.zero.length+' รหัสพัสดุมีน้ำหนักใน '+WNAME+' เป็น 0 หรือว่าง — '+ls(W.zero)+'</p>':'')})()+
       Object.keys(s.budOther).map(b=>'<p class="warn">⚠ '+fmt(s.budOther[b])+' แถวใน '+esc(S.extra.store)+' มีงบ "'+esc(b)+'" (ไม่ใช่ C/I/P) จึงไม่อยู่ในแท็บงบใด</p>').join('')+
