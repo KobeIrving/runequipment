@@ -3,6 +3,8 @@
 <meta name="color-scheme" content="dark">
 <title>ตัวแปลงรายงาน cn43n + zcn52n</title>
 <style>
+.credit{position:fixed;right:12px;bottom:6px;z-index:6;font-size:.8rem;color:var(--m);background:rgba(0,0,0,.75);padding:2px 8px;border-radius:4px;pointer-events:none}
+body{padding-bottom:28px}#pgView{padding-bottom:30px!important}
 :root{--bg:#000;--c:#050d06;--t:#33ff66;--m:#1fa64a;--d:#0f5c27;--hi:#9dffb5;--e:#ff5f56;--w:#ffd23f;--i:#5ce1ff}
 *{box-sizing:border-box}
 html,body{background:var(--bg)}
@@ -97,12 +99,13 @@ body.v{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hi
   <label for="xst"><b>แท็บข้อมูลเฉพาะแถวที่มีเลขที่ใบจองพัสดุ (แยกงบ C / I / P ต่อท้ายชื่อนี้)</b></label><input type="text" id="xst">
   <label><b>แท็บสรุปเพิ่มเติม (เฉพาะประเภทแถวแรก)</b></label>
   <div class="g3"><input type="text" id="xwb" aria-label="WBS booking"><input type="text" id="xm" aria-label="วัสดุ"><input type="text" id="xmb" aria-label="วัสดุ booking"></div>
+  <label for="xmr"><b>แท็บสรุปวัสดุของประเภทแถวที่สอง</b></label><input type="text" id="xmr">
   <label><input type="checkbox" id="dr"> ตัดแถว zcn52n ที่ไม่พบ WBS ใน cn43n ที่กรองแล้วออก (ปกติคงไว้และเว้นช่อง lookup ว่าง)</label>
   <div class="go" style="margin-top:10px"><button class="sec" id="rs" type="button">คืนค่าเริ่มต้น</button></div>
 </details>
 
 <div class="go"><button id="go" type="button" disabled>ประมวลผล</button><span class="mut" id="gohint"></span></div>
-<div class="tabs">แท็บในไฟล์ผลลัพธ์: Main 281 · main คลัง · main คลัง งบ C / I / P · Main 581 · WBS · WBS booking (+ แยกตามรหัส) · วัสดุ · วัสดุ booking (+ แยกตามรหัส) · WBS รื้อถอน · cn43n (กรอง) · แท็บ booking ตามรหัส · list น้ำหนัก</div>
+<div class="tabs">แท็บในไฟล์ผลลัพธ์: Main 281 · main คลัง · main คลัง งบ C / I / P · Main 581 · WBS · WBS booking (+ แยกตามรหัส) · วัสดุ · วัสดุ booking (+ แยกตามรหัส) · WBS รื้อถอน · วัสดุรื้อถอน · cn43n (กรอง) · แท็บ booking ตามรหัส · list น้ำหนัก</div>
 <div id="msg"></div><div id="sum"></div>
 </main>
 <div id="pgView" hidden>
@@ -307,10 +310,10 @@ function build(cn,zc,wr,S){
   }
   const E=S.extra,codes=S.applicants.filter(cd=>mains[0].some(r=>key(r[2])===cd)),byCode=cd=>mains[0].filter(r=>key(r[2])===cd),SM='คำอธิบายของวัสดุ';
   const defs=[[S.groups[0].pivot,mains[0],R7],[E.wbsBooking,mains[0],[...R7,...B2]],...codes.map(cd=>[E.wbsBooking+' '+cd,byCode(cd),[...R7,...B2]]),
-    [E.mat,mains[0],M7,SM],[E.matBooking,mains[0],[...M7,...B2],SM],...codes.map(cd=>[E.matBooking+' '+cd,byCode(cd),[...M7,...B2],SM]),[S.groups[1].pivot,mains[1],R7]];
+    [E.mat,mains[0],M7,SM],[E.matBooking,mains[0],[...M7,...B2],SM],...codes.map(cd=>[E.matBooking+' '+cd,byCode(cd),[...M7,...B2],SM]),[S.groups[1].pivot,mains[1],R7],[E.matRemove,mains[1],M7,SM]];
   const iBk=heads[0].indexOf('เลขที่ใบจองพัสดุ'),store=mains[0].filter(r=>String(r[iBk]).trim()!=='').map(r=>[...r,String(r[0]).trim().charAt(0)]);
   const bud={};for(const b of BUD)bud[b]=store.filter(r=>r[r.length-1]===b);const budOther={};for(const r of store){const b=r[r.length-1];if(!BUD.includes(b))budOther[b||'(ว่าง)']=(budOther[b||'(ว่าง)']||0)+1}
-  const pivots=defs.map(([name,rows,names,sub])=>({name,...pivot(heads[rows===mains[1]?1:0],rows,names,sub)}));addWeight(pivots[pivots.length-1]);
+  const pivots=defs.map(([name,rows,names,sub])=>({name,...pivot(heads[rows===mains[1]?1:0],rows,names,sub)}));const iRm=defs.findIndex(d=>d[0]===S.groups[1].pivot);addWeight(pivots[iRm]);
   const attList=Object.keys(att).map(code=>{const w=att[code].w;return{code,w,last:w.rows.length+1,kc:w.head.length}});
   return{cnHead:cn.head,cnF,heads,mains,store,bud,pivots,attList,iH,iL,iQ,
     stats:{sugg:Object.entries(sugg).sort((a,b)=>b[1].n-a[1].n).slice(0,10),store:store.length,storeSum:R6(store.reduce((s,o)=>s+o[o.length-2],0)),bud:BUD.map(b=>({b,rows:bud[b].length,sum:R6(bud[b].reduce((s,o)=>s+o[o.length-2],0))})),budOther,cnTotal:cn.rows.length,cnKept:cnF.length,zcTotal:zc.rows.length,missRows,miss:[...miss].slice(0,5),missN:miss.size,positive,other,bk,
@@ -357,16 +360,16 @@ function makeWorkbook(res,S){
 const $=s=>document.querySelector(s),LS='cn43n-zcn52n-tool-v2',MAXB=7;
 const DEF={statuses:'C1, C3, D1',applicants:'505636, 509959',drop:false,
   groups:[{t:'281',main:'Main 281',pivot:'WBS'},{t:'581',main:'Main 581',pivot:'WBS รื้อถอน'}],
-  extra:{store:'main คลัง',wbsBooking:'WBS booking',mat:'วัสดุ',matBooking:'วัสดุ booking'}};
+  extra:{store:'main คลัง',wbsBooking:'WBS booking',mat:'วัสดุ',matBooking:'วัสดุ booking',matRemove:'วัสดุรื้อถอน'}};
 const D={cn:null,zc:null,bk:[]};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt=n=>Number(n).toLocaleString('en-US',{maximumFractionDigits:2});
 function fill(S){$('#st').value=S.statuses;$('#ap').value=S.applicants;$('#dr').checked=!!S.drop;
   S.groups.forEach((g,i)=>{$('#g'+i+'t').value=g.t;$('#g'+i+'m').value=g.main;$('#g'+i+'p').value=g.pivot});
-  $('#xst').value=S.extra.store;$('#xwb').value=S.extra.wbsBooking;$('#xm').value=S.extra.mat;$('#xmb').value=S.extra.matBooking}
+  $('#xst').value=S.extra.store;$('#xwb').value=S.extra.wbsBooking;$('#xm').value=S.extra.mat;$('#xmb').value=S.extra.matBooking;$('#xmr').value=S.extra.matRemove}
 const read=()=>({statuses:$('#st').value,applicants:$('#ap').value,drop:$('#dr').checked,
   groups:[0,1].map(i=>({t:$('#g'+i+'t').value.trim(),main:$('#g'+i+'m').value.trim(),pivot:$('#g'+i+'p').value.trim()})),
-  extra:{store:$('#xst').value.trim(),wbsBooking:$('#xwb').value.trim(),mat:$('#xm').value.trim(),matBooking:$('#xmb').value.trim()}});
+  extra:{store:$('#xst').value.trim(),wbsBooking:$('#xwb').value.trim(),mat:$('#xm').value.trim(),matBooking:$('#xmb').value.trim(),matRemove:$('#xmr').value.trim()}});
 function msg(t,bad){const e=$('#msg');e.className=bad?'err':'';e.textContent=t}
 function stepMsg(id,t,bad){const e=$(id);e.className='note'+(bad?' err':'');e.textContent=t}
 function render(){
@@ -505,7 +508,7 @@ async function run(){
       '<tr><td>พบเลขที่ใบจองพัสดุ ('+esc(S.groups[0].main)+')</td><td>'+fmt(bk.hit)+' / '+fmt(bk.rows)+' แถว</td></tr>'+
       '<tr><td>'+esc(S.extra.store)+' (มีเลขที่ใบจอง)</td><td>'+fmt(s.store)+' แถว · คงเหลือรวม '+fmt(s.storeSum)+'</td></tr>'+
       s.bud.map(x=>'<tr><td>'+esc(S.extra.store)+' งบ '+x.b+'</td><td>'+fmt(x.rows)+' แถว · คงเหลือรวม '+fmt(x.sum)+'</td></tr>').join('')+
-      (()=>{const p=res.pivots[res.pivots.length-1],W=p.weight,ls=a=>a.slice(0,8).map(([c,d])=>'<b>'+esc(c)+'</b> '+esc(d)).join(', ')+(a.length>8?' …':'');
+      (()=>{const p=res.pivots.find(x=>x.weight),W=p.weight,ls=a=>a.slice(0,8).map(([c,d])=>'<b>'+esc(c)+'</b> '+esc(d)).join(', ')+(a.length>8?' …':'');
         return'<tr><td>'+esc(p.name)+' น้ำหนักรวม (คงเหลือ × น้ำหนัก/หน่วย)</td><td>'+W.total.toLocaleString('en-US',{maximumFractionDigits:3})+'</td></tr></table>'+
         (W.nf.length?'<p class="warn">⚠ '+esc(p.name)+': '+W.nf.length+' รหัสพัสดุไม่อยู่ใน '+WNAME+' จึงไม่ถูกนับน้ำหนัก — '+ls(W.nf)+'</p>':'')+
         (W.zero.length?'<p class="warn">⚠ '+esc(p.name)+': '+W.zero.length+' รหัสพัสดุมีน้ำหนักใน '+WNAME+' เป็น 0 หรือว่าง — '+ls(W.zero)+'</p>':'')})()+
@@ -541,4 +544,5 @@ function _unusedWireDrop(el,fn){
   $('#rs').onclick=()=>{fill(DEF);try{localStorage.removeItem(LS)}catch(e){};$('#aphint').textContent=''};
 })();
 </script>
+<div class="credit">จัดทำโดย นายแผ่นดิน จิตซื่อ วศก.5 ผปร. กฟส.ป่าซาง</div>
 </body></html>
