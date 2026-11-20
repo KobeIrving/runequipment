@@ -57,7 +57,7 @@ select{width:100%;padding:7px 9px;border:1px solid var(--d);border-radius:5px;ba
 .vtbl th{position:sticky;top:0;background:#0b1f0f;color:var(--hi);cursor:pointer;z-index:1;border-bottom:1px solid var(--m);padding:6px 10px;text-align:left}
 .vtbl td{padding:4px 10px;border-bottom:1px solid #0a2a12;color:var(--t)}.vtbl td:last-child{color:var(--t)}
 .vtbl .n{text-align:right;font-variant-numeric:tabular-nums}.vtbl .rn{color:var(--d);text-align:right;position:sticky;left:0;background:var(--c)}
-.vtbl tr.b td{font-weight:700;color:var(--hi);background:#0b1f0f}.vtbl tbody tr:hover td{background:#0e2a15}
+.vtbl tr.r td{background:#3d3100;color:#ffe066}.vtbl tr.r:hover td{background:#524200}.vtbl tr.b td{font-weight:700;color:var(--hi);background:#0b1f0f}.vtbl tbody tr:hover td{background:#0e2a15}
 .vpager{display:flex;gap:12px;align-items:center;justify-content:flex-end;margin-top:8px}.vpager button{padding:5px 12px}
 #appnav{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:6px;padding:8px 16px;background:#000;border-bottom:1px solid var(--d)}
 #appnav .brand{font:700 1rem 'Courier New',monospace;color:var(--hi);margin-right:10px;white-space:nowrap}
@@ -247,7 +247,7 @@ function addWeight(p,RK){
   const ik=['องค์ประกอบ WBS','วัสดุ'].map(n=>p.names.indexOf(n)),mk=k=>RK&&RK.has(ik.map(i=>String(k[i]).trim()).join('|'))?RETMARK:'';let nret=0;
   const im=p.names.indexOf('วัสดุ'),id=p.names.indexOf('คำอธิบายของวัสดุ'),N=p.names.length,nf=new Map(),zero=new Map();let tot=0;
   for(const o of p.out){if(!o.k){o.cells.push('',R6(tot),'');o.wtot=1;continue}
-    const mark=mk(o.k);if(mark)nret++;
+    const mark=mk(o.k);if(mark){nret++;o.ret=1}
     const code=String(o.k[im]).trim(),q=o.cells[N];o.wcode=code;
     if(!WMAP.has(code)){nf.set(code,o.k[id]);o.cells.push('','',mark);continue}
     const w=num(WMAP.get(code));if(!w)zero.set(code,o.k[id]);
@@ -353,7 +353,7 @@ function makeWorkbook(res,S){
       return[...a,{formula:`IFERROR(VLOOKUP(${ref},'${WNAME}'!$A:$C,3,FALSE),"")`,result:c[N+1]},{formula:`IF(${cW}${n}="","",${cQ}${n}*${cW}${n})`,result:c[N+2]},c[N+3]]};
     const ws=sheet(p.name,[...p.names,'Sum of คงเหลือ',...(W?WCOLS:[])],p.out.map(o=>o.cells),W?fw:null);ws.autoFilter=undefined;
     if(W)[N+2,N+3].forEach(j=>ws.getColumn(j).eachCell((c,n)=>{if(n>1)c.numFmt='#,##0.000'}));
-    p.out.forEach((o,i)=>{if(o.bold)ws.getRow(i+2).font={bold:true}})});
+    const nc=p.names.length+(W?4:1);p.out.forEach((o,i)=>{if(o.bold)ws.getRow(i+2).font={bold:true};if(o.ret)for(let j=1;j<=nc;j++)ws.getRow(i+2).getCell(j).fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFE699'}}})});
   sheet('cn43n (กรอง)',res.cnHead,res.cnF);
   A.forEach(a=>{const w=a.w;
     sheet(a.code,[...w.head,'คีย์ (ใบสั่ง|รหัสพัสดุ)'],w.rows,(r,n)=>[...r,{formula:`${L(w.iOrd)}${n}&"|"&${L(w.iMat)}${n}`,result:String(r[w.iOrd])+'|'+String(r[w.iMat])}])});
@@ -451,8 +451,8 @@ function viewTabs(res,S){
   for(const b of BUD)T.push({name:budName(S,b),head:[...hs,'งบ'],rows:res.bud[b],sum:hs.length-1});
   T.push({name:S.groups[1].main,head:res.heads[1],rows:res.mains[1],sum:res.heads[1].length-1});
   T.push({name:S.extra.ret,head:res.zcHead,rows:res.ret});
-  for(const p of res.pivots){const bold=new Set();p.out.forEach((o,i)=>{if(o.bold)bold.add(i)});
-    T.push({name:p.name,head:[...p.names,'Sum of คงเหลือ',...(p.weight?WCOLS:[])],rows:p.out.map(o=>o.cells),bold,pivot:1,fx:p.weight?(v=>typeof v==='number'?v.toLocaleString('en-US',{maximumFractionDigits:3}):cellTxt(v)):null})}
+  for(const p of res.pivots){const bold=new Set(),hl=new Set();p.out.forEach((o,i)=>{if(o.bold)bold.add(i);if(o.ret)hl.add(i)});
+    T.push({name:p.name,head:[...p.names,'Sum of คงเหลือ',...(p.weight?WCOLS:[])],rows:p.out.map(o=>o.cells),bold,hl,pivot:1,fx:p.weight?(v=>typeof v==='number'?v.toLocaleString('en-US',{maximumFractionDigits:3}):cellTxt(v)):null})}
   T.push({name:'cn43n (กรอง)',head:res.cnHead,rows:res.cnF});
   for(const a of res.attList)T.push({name:a.code,head:a.w.head,rows:a.w.rows});
   T.push({name:WNAME,head:WHEAD,rows:WLIST.map(r=>r.map(v=>v==null?'':v)),fx:v=>typeof v==='number'?String(R6(v)):String(v??'')});
@@ -479,7 +479,7 @@ function drawTable(){
   if(V.page>=pages)V.page=pages-1;const from=V.page*PAGE,slice=idx.slice(from,from+PAGE);
   const num=t.head.map((_,c)=>t.rows.slice(0,200).some(r=>typeof r[c]==='number'));
   let h='<table class="vtbl"><thead><tr><th class="rn">#</th>'+t.head.map((x,c)=>'<th data-c="'+c+'"'+(num[c]?' class="n"':'')+'>'+esc(x||'(ไม่มีหัว)')+(V.sort&&V.sort.c===c?(V.sort.d>0?' ▲':' ▼'):'')+'</th>').join('')+'</tr></thead><tbody>';
-  h+=slice.map(i=>{const r=t.rows[i];return'<tr'+(t.bold&&t.bold.has(i)?' class="b"':'')+'><td class="rn">'+(i+1)+'</td>'+t.head.map((_,c)=>'<td'+(num[c]?' class="n"':'')+'>'+esc((t.fx||cellTxt)(r[c]))+'</td>').join('')+'</tr>'}).join('');
+  h+=slice.map(i=>{const r=t.rows[i];return'<tr'+(t.bold&&t.bold.has(i)?' class="b"':t.hl&&t.hl.has(i)?' class="r"':'')+'><td class="rn">'+(i+1)+'</td>'+t.head.map((_,c)=>'<td'+(num[c]?' class="n"':'')+'>'+esc((t.fx||cellTxt)(r[c]))+'</td>').join('')+'</tr>'}).join('');
   if(!slice.length)h+='<tr><td class="rn"></td><td colspan="'+t.head.length+'" class="mut">'+(t.rows.length?'ไม่พบข้อมูลที่ค้นหา':'แท็บนี้ไม่มีข้อมูล')+'</td></tr>';
   h+='</tbody></table>';
   $('#vtable').innerHTML=h;$('#vtable').scrollTop=0;
